@@ -10,7 +10,7 @@ export function ProcessingStep() {
                     <Bot className="w-12 h-12 text-indigo-600" />
                 </div>
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Gemini analizează documentele...</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">AI Store analizează documentele...</h2>
             <p className="text-slate-500">Extragem tabelele, citim chitanțele și interpretăm structura vizuală.</p>
             <div className="w-64 h-2 bg-slate-100 rounded-full mt-8 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-full rounded-full origin-left animate-[progress_3s_ease-in-out]" />
