@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppAnimations } from './components/AppAnimations';
 import { AppFooter } from './components/AppFooter';
 import { AppHeader } from './components/AppHeader';
+import { AuthStep } from './components/AuthStep';
 import { ChatWidget } from './components/ChatWidget';
 import { Dashboard } from './components/Dashboard';
 import { ModulePreviewModal } from './components/ModulePreviewModal';
@@ -57,9 +58,20 @@ export default function App() {
         addFiles(Array.from(e.dataTransfer.files));
     };
 
-    const addSimulatedCameraPhoto = () => {
-        setFiles((prev) => [...prev, { name: 'fotografie_camera_001.jpg', type: 'image', size: '2.4 MB' }]);
+    const openAuthStep = () => {
+        setStep('auth');
+    };
+
+    const startDemoFlow = () => {
+        setFiles([
+            { name: 'catalog_gadgethub_laptopuri.xlsx', type: 'excel', size: '1.8 MB' },
+            { name: 'facturi_furnizori_gadgethub.pdf', type: 'pdf', size: '3.4 MB' },
+            { name: 'poza_stoc_smartwatch.jpg', type: 'image', size: '2.1 MB' },
+            { name: 'contract_curierat_gadgethub.pdf', type: 'pdf', size: '920 KB' }
+        ]);
         setStep(2);
+        setTimeout(() => setStep('processing'), 1800);
+        setTimeout(() => setStep(3), 4200);
     };
 
     const removeFile = (indexToRemove: number) => {
@@ -88,7 +100,7 @@ export default function App() {
                 ...prev,
                 {
                     role: 'ai',
-                    text: 'Conform datelor din documentele încărcate, vânzările din ultimul trimestru au crescut cu 12%, iar principalele surse de clienți noi sunt din campaniile B2B.'
+                    text: 'Conform datelor GadgetHub, vânzările de smartwatch-uri și docking station-uri au crescut cu 12%, iar comenzile online vin mai ales din campaniile pentru accesorii premium.'
                 }
             ]);
         }, 1500);
@@ -114,10 +126,12 @@ export default function App() {
                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                         onDragLeave={() => setIsDragging(false)}
                         onDrop={handleDrop}
-                        onFileInput={handleFileInput}
-                        onCameraPhoto={addSimulatedCameraPhoto}
+                        onChooseFiles={openAuthStep}
+                        onDemo={startDemoFlow}
                     />
                 )}
+
+                {step === 'auth' && <AuthStep onBack={() => setStep(1)} onFileInput={handleFileInput} />}
 
                 {step === 2 && <ReviewStep files={files} onFileInput={handleFileInput} onRemoveFile={removeFile} onProcessData={processData} />}
                 {step === 'processing' && <ProcessingStep />}

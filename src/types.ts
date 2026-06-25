@@ -1,6 +1,6 @@
 import type React from 'react';
 
-export type Step = 1 | 2 | 3 | 'processing';
+export type Step = 1 | 2 | 3 | 'auth' | 'processing';
 
 export type UploadedFile = {
     name: string;

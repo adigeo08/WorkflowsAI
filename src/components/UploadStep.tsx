@@ -1,16 +1,16 @@
 import type React from 'react';
-import { Camera, FileText, UploadCloud } from 'lucide-react';
+import { FileText, PlayCircle, UploadCloud } from 'lucide-react';
 
 type Props = {
     isDragging: boolean;
     onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
     onDragLeave: () => void;
     onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
-    onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onCameraPhoto: () => void;
+    onChooseFiles: () => void;
+    onDemo: () => void;
 };
 
-export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onFileInput, onCameraPhoto }: Props) {
+export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onChooseFiles, onDemo }: Props) {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
             <div className="text-center mb-10">
@@ -21,7 +21,7 @@ export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onFile
                     </span>
                 </h1>
                 <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                    Încarcă poze, facturi, tabele Excel sau PDF-uri. Sistemul nostru bazat pe Gemini AI va extrage, structura și crea grafice automat în câteva secunde.
+                    Încarcă poze, facturi, tabele Excel, Word sau PDF-uri. AI-ul îți înțelege datele și le transformă în module utile pentru firmă: CRM, ERP, magazin online sau landing page.
                 </p>
             </div>
 
@@ -39,14 +39,13 @@ export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onFile
                 <h3 className="text-2xl font-bold mb-3 text-slate-800">Trage și lasă fișierele aici</h3>
                 <p className="text-slate-500 mb-10 text-lg">Suportăm imagini JPG/PNG, fișiere Excel, CSV și PDF-uri.</p>
                 <div className="flex flex-wrap justify-center gap-4">
-                    <label className="cursor-pointer bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg flex items-center gap-3">
+                    <button type="button" onClick={onChooseFiles} className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg flex items-center gap-3">
                         <FileText className="w-6 h-6" />
                         Alege Fișiere
-                        <input type="file" multiple className="hidden" onChange={onFileInput} />
-                    </label>
-                    <button type="button" onClick={onCameraPhoto} className="bg-white border-2 border-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm flex items-center gap-3">
-                        <Camera className="w-6 h-6" />
-                        Fă o poză pe loc
+                    </button>
+                    <button type="button" onClick={onDemo} className="bg-white border-2 border-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm flex items-center gap-3">
+                        <PlayCircle className="w-6 h-6" />
+                        Vezi demo
                     </button>
                 </div>
             </div>
