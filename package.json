@@ -9,19 +9,19 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "react": "latest",
-    "react-dom": "latest",
+    "@measured/puck": "^0.20.2",
     "lucide-react": "latest",
-    "@measured/puck": "latest"
+    "react": "latest",
+    "react-dom": "latest"
   },
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "tailwindcss": "^3.4.17",
-    "postcss": "latest",
-    "autoprefixer": "latest",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest"
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.17",
+    "typescript": "latest",
+    "vite": "latest"
   }
 }
