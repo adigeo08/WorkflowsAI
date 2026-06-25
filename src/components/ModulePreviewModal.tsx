@@ -323,24 +323,237 @@ function ErpPreview() {
     const [editingInventoryId, setEditingInventoryId] = useState<string | null>(null);
     const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
-    return <div className="space-y-6"><div className="grid grid-cols-1 gap-4 md:grid-cols-3"><ErpKpi icon={<CreditCard className="h-10 w-10 rounded-xl bg-amber-100 p-2 text-amber-600" />} label="Conturi de încasat" value="48,200 RON" /><ErpKpi icon={<Truck className="h-10 w-10 rounded-xl bg-red-100 p-2 text-red-600" />} label="Stocuri minime" value={`${inventory.filter((item) => item.quantity <= item.minimumStock).length} Produse`} /><ErpKpi icon={<BarChart3 className="h-10 w-10 rounded-xl bg-emerald-100 p-2 text-emerald-600" />} label="Profit Net (T3)" value="112,800 RON" /></div><ErpTabs activeTab={activeErpTab} onTabChange={setActiveErpTab} counts={{ invoices: invoices.length, inventory: inventory.length, expenses: expenses.length }} />{activeErpTab === 'invoices' && <InvoiceForm invoices={invoices} draft={invoiceDraft} editingId={editingInvoiceId} onDraftChange={setInvoiceDraft} onSubmit={() => { if (!invoiceDraft.client.trim()) return; setInvoices((prev) => editingInvoiceId ? prev.map((invoice) => invoice.id === editingInvoiceId ? { ...invoiceDraft, id: editingInvoiceId } : invoice) : [...prev, { ...invoiceDraft, id: createId('invoice') }]); setEditingInvoiceId(null); setInvoiceDraft(emptyInvoice); }} onEdit={(invoice) => { setEditingInvoiceId(invoice.id); setInvoiceDraft(invoice); }} onStatusChange={(id, status) => setInvoices((prev) => prev.map((invoice) => invoice.id === id ? { ...invoice, status } : invoice))} />}{activeErpTab === 'inventory' && <InventoryForm inventory={inventory} draft={inventoryDraft} editingId={editingInventoryId} onDraftChange={setInventoryDraft} onSubmit={() => { if (!inventoryDraft.productName.trim()) return; setInventory((prev) => editingInventoryId ? prev.map((item) => item.id === editingInventoryId ? { ...inventoryDraft, id: editingInventoryId } : item) : [...prev, { ...inventoryDraft, id: createId('stock') }]); setEditingInventoryId(null); setInventoryDraft(emptyInventoryItem); }} onEdit={(item) => { setEditingInventoryId(item.id); setInventoryDraft(item); }} onAdjust={(id, amount) => setInventory((prev) => prev.map((item) => item.id === id ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item))} />}{activeErpTab === 'expenses' && <ExpenseForm expenses={expenses} draft={expenseDraft} editingId={editingExpenseId} onDraftChange={setExpenseDraft} onSubmit={() => { if (!expenseDraft.type.trim()) return; setExpenses((prev) => editingExpenseId ? prev.map((expense) => expense.id === editingExpenseId ? { ...expenseDraft, id: editingExpenseId } : expense) : [...prev, { ...expenseDraft, id: createId('expense') }]); setEditingExpenseId(null); setExpenseDraft(emptyExpense); }} onEdit={(expense) => { setEditingExpenseId(expense.id); setExpenseDraft(expense); }} onStatusChange={(id, paymentStatus) => setExpenses((prev) => prev.map((expense) => expense.id === id ? { ...expense, paymentStatus } : expense))} onDelete={(id) => setExpenses((prev) => prev.filter((expense) => expense.id !== id))} />}</div>;
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <ErpKpi icon={<CreditCard className="h-10 w-10 rounded-xl bg-amber-100 p-2 text-amber-600" />} label="Conturi de încasat" value="48,200 RON" />
+                <ErpKpi icon={<Truck className="h-10 w-10 rounded-xl bg-red-100 p-2 text-red-600" />} label="Stocuri minime" value={`${inventory.filter((item) => item.quantity <= item.minimumStock).length} Produse`} />
+                <ErpKpi icon={<BarChart3 className="h-10 w-10 rounded-xl bg-emerald-100 p-2 text-emerald-600" />} label="Profit Net (T3)" value="112,800 RON" />
+            </div>
+
+            <ErpTabs activeTab={activeErpTab} onTabChange={setActiveErpTab} counts={{ invoices: invoices.length, inventory: inventory.length, expenses: expenses.length }} />
+
+            {activeErpTab === 'invoices' && (
+                <InvoiceForm
+                    invoices={invoices}
+                    draft={invoiceDraft}
+                    editingId={editingInvoiceId}
+                    onDraftChange={setInvoiceDraft}
+                    onSubmit={() => {
+                        if (!invoiceDraft.client.trim()) return;
+
+                        setInvoices((prev) =>
+                            editingInvoiceId
+                                ? prev.map((invoice) => invoice.id === editingInvoiceId ? { ...invoiceDraft, id: editingInvoiceId } : invoice)
+                                : [...prev, { ...invoiceDraft, id: createId('invoice') }]
+                        );
+
+                        setEditingInvoiceId(null);
+                        setInvoiceDraft(emptyInvoice);
+                    }}
+                    onEdit={(invoice) => {
+                        setEditingInvoiceId(invoice.id);
+                        setInvoiceDraft(invoice);
+                    }}
+                />
+            )}
+
+            {activeErpTab === 'inventory' && (
+                <InventoryForm
+                    inventory={inventory}
+                    draft={inventoryDraft}
+                    editingId={editingInventoryId}
+                    onDraftChange={setInventoryDraft}
+                    onSubmit={() => {
+                        if (!inventoryDraft.productName.trim()) return;
+
+                        setInventory((prev) =>
+                            editingInventoryId
+                                ? prev.map((item) => item.id === editingInventoryId ? { ...inventoryDraft, id: editingInventoryId } : item)
+                                : [...prev, { ...inventoryDraft, id: createId('stock') }]
+                        );
+
+                        setEditingInventoryId(null);
+                        setInventoryDraft(emptyInventoryItem);
+                    }}
+                    onEdit={(item) => {
+                        setEditingInventoryId(item.id);
+                        setInventoryDraft(item);
+                    }}
+                    onAdjust={(id, amount) => setInventory((prev) => prev.map((item) => item.id === id ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item))}
+                />
+            )}
+
+            {activeErpTab === 'expenses' && (
+                <ExpenseForm
+                    expenses={expenses}
+                    draft={expenseDraft}
+                    editingId={editingExpenseId}
+                    onDraftChange={setExpenseDraft}
+                    onSubmit={() => {
+                        if (!expenseDraft.type.trim()) return;
+
+                        setExpenses((prev) =>
+                            editingExpenseId
+                                ? prev.map((expense) => expense.id === editingExpenseId ? { ...expenseDraft, id: editingExpenseId } : expense)
+                                : [...prev, { ...expenseDraft, id: createId('expense') }]
+                        );
+
+                        setEditingExpenseId(null);
+                        setExpenseDraft(emptyExpense);
+                    }}
+                    onEdit={(expense) => {
+                        setEditingExpenseId(expense.id);
+                        setExpenseDraft(expense);
+                    }}
+                    onDelete={(id) => setExpenses((prev) => prev.filter((expense) => expense.id !== id))}
+                />
+            )}
+        </div>
+    );
 }
 
 function ErpTabs({ activeTab, onTabChange, counts }: { activeTab: ErpTab; onTabChange: (tab: ErpTab) => void; counts: Record<ErpTab, number> }) {
     return <TabBar tabs={[{ id: 'invoices', label: 'Facturi', count: counts.invoices }, { id: 'inventory', label: 'Stocuri', count: counts.inventory }, { id: 'expenses', label: 'Cheltuieli', count: counts.expenses }]} activeTab={activeTab} onTabChange={onTabChange} />;
 }
 
-function InvoiceForm({ invoices, draft, editingId, onDraftChange, onSubmit, onEdit, onStatusChange }: { invoices: Invoice[]; draft: Omit<Invoice, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Invoice, 'id'>) => void; onSubmit: () => void; onEdit: (invoice: Invoice) => void; onStatusChange: (id: string, status: InvoiceStatus) => void }) {
-    return <section className="rounded-3xl border border-amber-100 bg-amber-50/60 p-5"><FormHeader title="Emitere factură / proformă" description="Flux operațional pentru documente, scadențe, plăți și stornări." buttonLabel={editingId ? 'Salvează document' : 'Emite document'} onSubmit={onSubmit} icon={<FileText className="h-4 w-4" />} /><div className="mt-5 grid gap-3 md:grid-cols-4"><SelectInput value={draft.documentType} onChange={(documentType) => { const nextDocumentType = documentType as InvoiceDocumentType; onDraftChange({ ...draft, documentType: nextDocumentType, status: nextDocumentType === 'Proformă' ? 'Proformă' : draft.status === 'Proformă' ? 'Emisă' : draft.status }); }} options={['Factură', 'Proformă']} /><TextInput value={draft.number} onChange={(number) => onDraftChange({ ...draft, number })} placeholder="Număr" /><TextInput value={draft.client} onChange={(client) => onDraftChange({ ...draft, client })} placeholder="Client" /><TextInput value={draft.description} onChange={(description) => onDraftChange({ ...draft, description })} placeholder="Descriere" /><TextInput value={draft.value} onChange={(value) => onDraftChange({ ...draft, value })} placeholder="Valoare" /><TextInput value={draft.vat} onChange={(vat) => onDraftChange({ ...draft, vat })} placeholder="TVA" /><TextInput value={draft.dueDate} onChange={(dueDate) => onDraftChange({ ...draft, dueDate })} placeholder="Scadență" /><SelectInput value={draft.status} onChange={(status) => onDraftChange({ ...draft, status: status as InvoiceStatus })} options={['Proformă', 'Emisă', 'Plătită', 'Restantă', 'Stornată']} /></div><DataTable headers={['Tip', 'Număr', 'Client', 'Descriere', 'Valoare', 'TVA', 'Scadență', 'Status', 'Acțiuni']}>{invoices.map((invoice) => <tr key={invoice.id} className="border-t border-slate-100"><td className="p-3">{invoice.documentType}</td><td className="p-3 font-bold">{invoice.number}</td><td className="p-3">{invoice.client}</td><td className="p-3">{invoice.description}</td><td className="p-3 font-semibold">{invoice.value}</td><td className="p-3">{invoice.vat}</td><td className="p-3"><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{invoice.dueDate}</span></td><td className="p-3"><StatusBadge status={invoice.status} /></td><td className="p-3"><div className="flex flex-wrap gap-2"><button onClick={() => onStatusChange(invoice.id, 'Plătită')} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Plătită</button><button onClick={() => onStatusChange(invoice.id, 'Stornată')} className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">Stornare</button><button onClick={() => onEdit(invoice)} className="rounded-lg bg-blue-50 p-2 text-blue-600"><Edit3 className="h-4 w-4" /></button><SelectInput value={invoice.status} onChange={(status) => onStatusChange(invoice.id, status as InvoiceStatus)} options={['Proformă', 'Emisă', 'Plătită', 'Restantă', 'Stornată']} compact /></div></td></tr>)}</DataTable></section>;
+function InvoiceForm({ invoices, draft, editingId, onDraftChange, onSubmit, onEdit }: { invoices: Invoice[]; draft: Omit<Invoice, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Invoice, 'id'>) => void; onSubmit: () => void; onEdit: (invoice: Invoice) => void }) {
+    const editActions = editingId ? (
+        <EditActionPanel
+            title="Acțiuni document"
+            description="Acțiunile de status apar doar când editezi documentul selectat."
+            status={draft.status}
+        >
+            <button type="button" onClick={() => onDraftChange({ ...draft, status: 'Emisă' })} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100">Marchează emisă</button>
+            <button type="button" onClick={() => onDraftChange({ ...draft, status: 'Plătită' })} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100">Marchează plătită</button>
+            <button type="button" onClick={() => onDraftChange({ ...draft, status: 'Restantă' })} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100">Marchează restantă</button>
+            <button type="button" onClick={() => onDraftChange({ ...draft, status: 'Stornată' })} className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-300">Stornează</button>
+        </EditActionPanel>
+    ) : null;
+
+    return (
+        <section className="rounded-3xl border border-amber-100 bg-amber-50/60 p-5">
+            <FormHeader
+                title="Emitere factură / proformă"
+                description="Flux operațional pentru documente, scadențe, plăți și stornări."
+                buttonLabel={editingId ? 'Salvează document' : 'Emite document'}
+                onSubmit={onSubmit}
+                icon={<FileText className="h-4 w-4" />}
+                secondaryActions={editActions}
+            />
+
+            <div className="mt-5 grid gap-3 md:grid-cols-4">
+                <SelectInput
+                    value={draft.documentType}
+                    onChange={(documentType) => {
+                        const nextDocumentType = documentType as InvoiceDocumentType;
+
+                        onDraftChange({
+                            ...draft,
+                            documentType: nextDocumentType,
+                            status: nextDocumentType === 'Proformă'
+                                ? 'Proformă'
+                                : draft.status === 'Proformă'
+                                    ? 'Emisă'
+                                    : draft.status
+                        });
+                    }}
+                    options={['Factură', 'Proformă']}
+                />
+                <TextInput value={draft.number} onChange={(number) => onDraftChange({ ...draft, number })} placeholder="Număr" />
+                <TextInput value={draft.client} onChange={(client) => onDraftChange({ ...draft, client })} placeholder="Client" />
+                <TextInput value={draft.description} onChange={(description) => onDraftChange({ ...draft, description })} placeholder="Descriere" />
+                <TextInput value={draft.value} onChange={(value) => onDraftChange({ ...draft, value })} placeholder="Valoare" />
+                <TextInput value={draft.vat} onChange={(vat) => onDraftChange({ ...draft, vat })} placeholder="TVA" />
+                <TextInput value={draft.dueDate} onChange={(dueDate) => onDraftChange({ ...draft, dueDate })} placeholder="Scadență" />
+                <SelectInput value={draft.status} onChange={(status) => onDraftChange({ ...draft, status: status as InvoiceStatus })} options={['Proformă', 'Emisă', 'Plătită', 'Restantă', 'Stornată']} />
+            </div>
+
+            <DataTable headers={['Tip', 'Număr', 'Client', 'Descriere', 'Valoare', 'TVA', 'Scadență', 'Status', 'Acțiuni']}>
+                {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-t border-slate-100">
+                        <td className="p-3">{invoice.documentType}</td>
+                        <td className="p-3 font-bold">{invoice.number}</td>
+                        <td className="p-3">{invoice.client}</td>
+                        <td className="p-3">{invoice.description}</td>
+                        <td className="p-3 font-semibold">{invoice.value}</td>
+                        <td className="p-3">{invoice.vat}</td>
+                        <td className="p-3"><span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{invoice.dueDate}</span></td>
+                        <td className="p-3"><StatusBadge status={invoice.status} /></td>
+                        <td className="p-3">
+                            <button type="button" onClick={() => onEdit(invoice)} className="rounded-lg bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
+                                <Edit3 className="h-4 w-4" />
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+            </DataTable>
+        </section>
+    );
 }
 
 function InventoryForm({ inventory, draft, editingId, onDraftChange, onSubmit, onEdit, onAdjust }: { inventory: InventoryItem[]; draft: Omit<InventoryItem, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<InventoryItem, 'id'>) => void; onSubmit: () => void; onEdit: (item: InventoryItem) => void; onAdjust: (id: string, amount: number) => void }) {
     return <section className="rounded-3xl border border-blue-100 bg-blue-50/50 p-5"><FormHeader title="Produse și stocuri" description="Recepții, scăderi și alertă pentru stoc minim." buttonLabel={editingId ? 'Salvează produs' : 'Adaugă produs'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-3"><TextInput value={draft.productName} onChange={(productName) => onDraftChange({ ...draft, productName })} placeholder="Nume produs" /><TextInput value={draft.sku} onChange={(sku) => onDraftChange({ ...draft, sku })} placeholder="SKU" /><TextInput value={draft.category} onChange={(category) => onDraftChange({ ...draft, category })} placeholder="Categorie" /><NumberInput value={draft.quantity} onChange={(quantity) => onDraftChange({ ...draft, quantity })} placeholder="Cantitate" /><NumberInput value={draft.minimumStock} onChange={(minimumStock) => onDraftChange({ ...draft, minimumStock })} placeholder="Stoc minim" /><TextInput value={draft.supplier} onChange={(supplier) => onDraftChange({ ...draft, supplier })} placeholder="Furnizor" /></div><DataTable headers={['Produs', 'SKU', 'Categorie', 'Cantitate', 'Stoc minim', 'Furnizor', 'Acțiuni']}>{inventory.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="p-3 font-bold">{item.productName}</td><td className="p-3">{item.sku}</td><td className="p-3">{item.category}</td><td className="p-3 font-semibold">{item.quantity} buc.</td><td className="p-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${item.quantity <= item.minimumStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{item.quantity <= item.minimumStock ? 'Sub minim' : `Min. ${item.minimumStock}`}</span></td><td className="p-3">{item.supplier}</td><td className="p-3"><div className="flex flex-wrap gap-2"><button onClick={() => onAdjust(item.id, 5)} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Recepție +5</button><button onClick={() => onAdjust(item.id, -1)} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">Scădere -1</button><button onClick={() => onEdit(item)} className="rounded-lg bg-blue-50 p-2 text-blue-600"><Edit3 className="h-4 w-4" /></button></div></td></tr>)}</DataTable></section>;
 }
 
-function ExpenseForm({ expenses, draft, editingId, onDraftChange, onSubmit, onEdit, onStatusChange, onDelete }: { expenses: Expense[]; draft: Omit<Expense, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Expense, 'id'>) => void; onSubmit: () => void; onEdit: (expense: Expense) => void; onStatusChange: (id: string, status: ExpenseStatus) => void; onDelete: (id: string) => void }) {
+function ExpenseForm({ expenses, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete }: { expenses: Expense[]; draft: Omit<Expense, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Expense, 'id'>) => void; onSubmit: () => void; onEdit: (expense: Expense) => void; onDelete: (id: string) => void }) {
     const costCenters = Array.from(new Set(expenses.map((expense) => expense.costCenter)));
-    return <section className="rounded-3xl border border-rose-100 bg-rose-50/50 p-5"><FormHeader title="Cheltuieli" description="Urmărește furnizori, centre de cost și status de plată." buttonLabel={editingId ? 'Salvează cheltuială' : 'Adaugă cheltuială'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-3"><TextInput value={draft.type} onChange={(type) => onDraftChange({ ...draft, type })} placeholder="Tip cheltuială" /><TextInput value={draft.supplier} onChange={(supplier) => onDraftChange({ ...draft, supplier })} placeholder="Furnizor" /><TextInput value={draft.value} onChange={(value) => onDraftChange({ ...draft, value })} placeholder="Valoare" /><TextInput value={draft.date} onChange={(date) => onDraftChange({ ...draft, date })} placeholder="Data" /><SelectInput value={draft.paymentStatus} onChange={(paymentStatus) => onDraftChange({ ...draft, paymentStatus: paymentStatus as ExpenseStatus })} options={['Neplătită', 'Programată', 'Plătită']} /><TextInput value={draft.costCenter} onChange={(costCenter) => onDraftChange({ ...draft, costCenter })} placeholder="Centru de cost" /></div><div className="mt-5 grid gap-3 md:grid-cols-3">{costCenters.map((center) => <div key={center} className="rounded-2xl bg-white p-4 shadow-sm"><p className="text-xs font-bold uppercase text-slate-400">{center}</p><p className="mt-1 text-2xl font-black text-slate-900">{expenses.filter((expense) => expense.costCenter === center).length}</p><p className="text-sm text-slate-500">cheltuieli dummy</p></div>)}</div><DataTable headers={['Tip', 'Furnizor', 'Valoare', 'Data', 'Status plată', 'Centru cost', 'Acțiuni']}>{expenses.map((expense) => <tr key={expense.id} className="border-t border-slate-100"><td className="p-3 font-bold">{expense.type}</td><td className="p-3">{expense.supplier}</td><td className="p-3 font-semibold">{expense.value}</td><td className="p-3">{expense.date}</td><td className="p-3"><StatusBadge status={expense.paymentStatus} /></td><td className="p-3">{expense.costCenter}</td><td className="p-3"><div className="flex gap-2"><button onClick={() => onStatusChange(expense.id, 'Plătită')} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Plătită</button><button onClick={() => onEdit(expense)} className="rounded-lg bg-blue-50 p-2 text-blue-600"><Edit3 className="h-4 w-4" /></button><button onClick={() => onDelete(expense.id)} className="rounded-lg bg-red-50 p-2 text-red-600"><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</DataTable></section>;
+
+    const editActions = editingId ? (
+        <EditActionPanel
+            title="Acțiuni plată"
+            description="Schimbarea statusului de plată se face din zona de editare, nu din rândul tabelului."
+            status={draft.paymentStatus}
+        >
+            <button type="button" onClick={() => onDraftChange({ ...draft, paymentStatus: 'Neplătită' })} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100">Neplătită</button>
+            <button type="button" onClick={() => onDraftChange({ ...draft, paymentStatus: 'Programată' })} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100">Programată</button>
+            <button type="button" onClick={() => onDraftChange({ ...draft, paymentStatus: 'Plătită' })} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100">Plătită</button>
+        </EditActionPanel>
+    ) : null;
+
+    return (
+        <section className="rounded-3xl border border-rose-100 bg-rose-50/50 p-5">
+            <FormHeader
+                title="Cheltuieli"
+                description="Urmărește furnizori, centre de cost și status de plată."
+                buttonLabel={editingId ? 'Salvează cheltuială' : 'Adaugă cheltuială'}
+                onSubmit={onSubmit}
+                secondaryActions={editActions}
+            />
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+                <TextInput value={draft.type} onChange={(type) => onDraftChange({ ...draft, type })} placeholder="Tip cheltuială" />
+                <TextInput value={draft.supplier} onChange={(supplier) => onDraftChange({ ...draft, supplier })} placeholder="Furnizor" />
+                <TextInput value={draft.value} onChange={(value) => onDraftChange({ ...draft, value })} placeholder="Valoare" />
+                <TextInput value={draft.date} onChange={(date) => onDraftChange({ ...draft, date })} placeholder="Data" />
+                <SelectInput value={draft.paymentStatus} onChange={(paymentStatus) => onDraftChange({ ...draft, paymentStatus: paymentStatus as ExpenseStatus })} options={['Neplătită', 'Programată', 'Plătită']} />
+                <TextInput value={draft.costCenter} onChange={(costCenter) => onDraftChange({ ...draft, costCenter })} placeholder="Centru de cost" />
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {costCenters.map((center) => <div key={center} className="rounded-2xl bg-white p-4 shadow-sm"><p className="text-xs font-bold uppercase text-slate-400">{center}</p><p className="mt-1 text-2xl font-black text-slate-900">{expenses.filter((expense) => expense.costCenter === center).length}</p><p className="text-sm text-slate-500">cheltuieli dummy</p></div>)}
+            </div>
+
+            <DataTable headers={['Tip', 'Furnizor', 'Valoare', 'Data', 'Status plată', 'Centru cost', 'Acțiuni']}>
+                {expenses.map((expense) => (
+                    <tr key={expense.id} className="border-t border-slate-100">
+                        <td className="p-3 font-bold">{expense.type}</td>
+                        <td className="p-3">{expense.supplier}</td>
+                        <td className="p-3 font-semibold">{expense.value}</td>
+                        <td className="p-3">{expense.date}</td>
+                        <td className="p-3"><StatusBadge status={expense.paymentStatus} /></td>
+                        <td className="p-3">{expense.costCenter}</td>
+                        <td className="p-3">
+                            <div className="flex gap-2">
+                                <button onClick={() => onEdit(expense)} className="rounded-lg bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"><Edit3 className="h-4 w-4" /></button>
+                                <button onClick={() => onDelete(expense.id)} className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
+            </DataTable>
+        </section>
+    );
 }
 
 function EcommerceBuilderPreview() {
@@ -411,8 +624,41 @@ function TabBar<T extends string>({ tabs, activeTab, onTabChange }: { tabs: { id
     return <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">{tabs.map((tab) => <button key={tab.id} onClick={() => onTabChange(tab.id)} className={`rounded-xl px-4 py-2 text-sm font-black transition ${activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{tab.label} <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">{tab.count}</span></button>)}</div>;
 }
 
-function FormHeader({ title, description, buttonLabel, onSubmit, icon }: { title: string; description: string; buttonLabel: string; onSubmit: () => void; icon?: ReactNode }) {
-    return <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"><div><h3 className="text-xl font-black text-slate-900">{title}</h3><p className="text-sm text-slate-500">{description}</p></div><button type="button" onClick={onSubmit} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800">{icon ?? <Plus className="h-4 w-4" />}{buttonLabel}</button></div>;
+function FormHeader({ title, description, buttonLabel, onSubmit, icon, secondaryActions }: { title: string; description: string; buttonLabel: string; onSubmit: () => void; icon?: ReactNode; secondaryActions?: ReactNode }) {
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <h3 className="text-xl font-black text-slate-900">{title}</h3>
+                    <p className="text-sm text-slate-500">{description}</p>
+                </div>
+                <button type="button" onClick={onSubmit} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800">
+                    {icon ?? <Plus className="h-4 w-4" />}
+                    {buttonLabel}
+                </button>
+            </div>
+            {secondaryActions}
+        </div>
+    );
+}
+
+function EditActionPanel({ title, description, status, children }: { title: string; description: string; status: string; children: ReactNode }) {
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-black text-slate-900">{title}</h4>
+                        <StatusBadge status={status} />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{description}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function TextInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
