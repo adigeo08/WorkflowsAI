@@ -36,7 +36,13 @@ export function AppHeader({ step, isDataProcessed, onOpenModules }: Props) {
                 <ChevronRight className="w-4 h-4" />
                 <StepIndicator active={step === 2} completed={step === 3 || step === 'processing'} label="Verificare" number={2} />
                 <ChevronRight className="w-4 h-4" />
-                <StepIndicator active={step === 3} processing={step === 'processing'} label="Analiză AI" number={3} />
+                <StepIndicator
+                    active={false}
+                    completed={step === 3}
+                    processing={step === 'processing'}
+                    label={step === 3 ? 'Totul analizat' : 'Analiză AI'}
+                    number={3}
+                />
             </div>
         </header>
     );
