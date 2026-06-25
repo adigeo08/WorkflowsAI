@@ -5,6 +5,20 @@ export function AppAnimations() {
           0% { transform: scaleX(0); }
           100% { transform: scaleX(1); }
         }
+        @keyframes gentleFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-0.55rem); }
+        }
+        @keyframes installPulse {
+          0% { transform: scaleX(0); opacity: 0.65; }
+          70% { transform: scaleX(1); opacity: 1; }
+          100% { transform: scaleX(1); opacity: 0; }
+        }
+        @keyframes installPop {
+          0% { transform: translateY(0) scale(1); }
+          45% { transform: translateY(-0.25rem) scale(1.04); }
+          100% { transform: translateY(0) scale(1); }
+        }
         .animate-in { animation-duration: 0.5s; animation-fill-mode: both; }
         .fade-in { animation-name: fadeIn; }
         .slide-in-from-bottom-4 { animation-name: slideInFromBottom4; }
@@ -13,6 +27,9 @@ export function AppAnimations() {
         .slide-in-from-right-full { animation-name: slideInFromRightFull; }
         .slide-in-from-bottom-5 { animation-name: slideInFromBottom5; }
         .zoom-in-95 { animation-name: zoomIn95; }
+        .animate-gentle-float { animation: gentleFloat 3.2s ease-in-out infinite; }
+        .animate-install-pop { animation: installPop 700ms ease-out both; }
+        .animate-install-pulse { animation: installPulse 900ms ease-out both; transform-origin: left; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInFromBottom4 { from { transform: translateY(1rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes slideInFromBottom8 { from { transform: translateY(2rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

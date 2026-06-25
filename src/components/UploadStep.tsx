@@ -33,7 +33,7 @@ export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onChoo
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
             >
-                <div className="w-24 h-24 mx-auto bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-8 shadow-sm">
+                <div className="w-24 h-24 mx-auto bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-8 shadow-sm animate-gentle-float">
                     <UploadCloud className="w-12 h-12" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-slate-800">Trage și lasă fișierele aici</h3>
