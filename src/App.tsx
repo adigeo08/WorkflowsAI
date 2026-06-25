@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Grid, Lock } from 'lucide-react';
 import { AppAnimations } from './components/AppAnimations';
 import { AppFooter } from './components/AppFooter';
 import { AppHeader } from './components/AppHeader';
@@ -132,6 +133,30 @@ export default function App() {
             </main>
 
             <AppFooter />
+
+            <button
+                type="button"
+                onClick={() => {
+                    if (isDataProcessed) setIsModulesOpen(true);
+                }}
+                disabled={!isDataProcessed}
+                aria-label={isDataProcessed ? 'Deschide marketplace-ul de module' : 'Marketplace blocat până la finalizarea analizei'}
+                className={`md:hidden fixed bottom-7 left-4 right-24 z-30 flex items-center gap-3 rounded-2xl border px-4 py-3 text-left shadow-2xl backdrop-blur transition-all ${
+                    isDataProcessed
+                        ? 'border-white/60 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:-translate-y-0.5 hover:shadow-indigo-500/30 active:translate-y-0'
+                        : 'border-slate-200 bg-white/90 text-slate-400 cursor-not-allowed'
+                }`}
+            >
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isDataProcessed ? 'bg-white/20' : 'bg-slate-100'}`}>
+                    {isDataProcessed ? <Grid className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+                </span>
+                <span className="min-w-0">
+                    <span className="block text-sm font-extrabold leading-tight">Marketplace</span>
+                    <span className={`block truncate text-[11px] font-semibold leading-tight ${isDataProcessed ? 'text-indigo-100' : 'text-slate-400'}`}>
+                        {isDataProcessed ? 'Adaugă module' : 'Disponibil după analiză'}
+                    </span>
+                </span>
+            </button>
 
             <ChatWidget
                 isOpen={isChatOpen}
