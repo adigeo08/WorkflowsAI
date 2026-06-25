@@ -7,7 +7,7 @@ export function BrandLogo() {
                 <Sparkles className="w-5 h-5" />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                AI Workflows
+                Ai Store
             </span>
         </div>
     );

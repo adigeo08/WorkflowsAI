@@ -70,8 +70,6 @@ export default function App() {
             { name: 'contract_curierat_gadgethub.pdf', type: 'pdf', size: '920 KB' }
         ]);
         setStep(2);
-        setTimeout(() => setStep('processing'), 1800);
-        setTimeout(() => setStep(3), 4200);
     };
 
     const removeFile = (indexToRemove: number) => {
@@ -131,7 +129,7 @@ export default function App() {
                     />
                 )}
 
-                {step === 'auth' && <AuthStep onBack={() => setStep(1)} onFileInput={handleFileInput} />}
+                {step === 'auth' && <AuthStep onBack={() => setStep(1)} />}
 
                 {step === 2 && <ReviewStep files={files} onFileInput={handleFileInput} onRemoveFile={removeFile} onProcessData={processData} />}
                 {step === 'processing' && <ProcessingStep />}

@@ -1,4 +1,4 @@
-# AI Workflows
+# Ai Store
 
 Aplicație React + Vite configurată pentru publicare pe GitHub Pages.
 
