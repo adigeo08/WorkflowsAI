@@ -53,7 +53,8 @@ export default function App() {
     const [isDragging, setIsDragging] = useState(false);
 
     const [isModulesOpen, setIsModulesOpen] = useState(false);
-    const [installedModules, setInstalledModules] = useState<ModuleId[]>(['crm']);
+    const [installedModules, setInstalledModules] = useState<ModuleId[]>([]);
+    const [activeModule, setActiveModule] = useState<ModuleId | null>(null);
 
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
         {
@@ -239,6 +240,43 @@ export default function App() {
             change: 'Estimare AI'
         }
     ];
+
+    const monthlySales = [
+        { month: 'Ian', value: 48, total: '4.8K' },
+        { month: 'Feb', value: 74, total: '8.4K' },
+        { month: 'Mar', value: 52, total: '6.1K' },
+        { month: 'Apr', value: 91, total: '10.9K' },
+        { month: 'Mai', value: 68, total: '7.8K' },
+        { month: 'Iun', value: 100, total: '12.4K' },
+        { month: 'Iul', value: 86, total: '9.9K' }
+    ];
+
+    const moduleScreens: Record<ModuleId, { title: string; subtitle: string; stats: string[]; rows: string[] }> = {
+        crm: {
+            title: 'CRM Integrat',
+            subtitle: 'Pipeline demo cu prospecți, task-uri și oportunități generate din datele încărcate.',
+            stats: ['38 lead-uri', '12 oportunități', '64% follow-up'],
+            rows: ['Dacia Service — ofertă flote — 24.000 RON', 'Nova Retail — demo programat — 8.500 RON', 'Atlas Construct — contract în negociere — 31.200 RON']
+        },
+        ecommerce: {
+            title: 'eCommerce',
+            subtitle: 'Magazin demo sincronizat cu produse, comenzi și stocuri exemplu.',
+            stats: ['126 produse', '18 comenzi azi', '92% stoc activ'],
+            rows: ['Comanda #1048 — 3 produse — 1.240 RON', 'Comanda #1049 — 1 produs — 340 RON', 'Comanda #1050 — 7 produse — 2.860 RON']
+        },
+        erp: {
+            title: 'ERP Cloud',
+            subtitle: 'Centru operațional demo pentru facturi, resurse și costuri recurente.',
+            stats: ['54 facturi', '7 centre cost', '18 aprobări'],
+            rows: ['Factura F-2381 — Software SaaS — scadentă vineri', 'Achiziție A-144 — Echipamente — în aprobare', 'Buget Q3 — Marketing — consum 62%']
+        },
+        landing: {
+            title: 'Landing Page AI',
+            subtitle: 'Pagini demo generate automat pentru campanii, servicii și captare lead-uri.',
+            stats: ['4 pagini', '21.8% conversie', '312 lead-uri'],
+            rows: ['Pagina „Audit AI gratuit” — 148 lead-uri', 'Pagina „Automatizări facturi” — 96 lead-uri', 'Pagina „Demo CRM” — 68 lead-uri']
+        }
+    };
 
     const expenseCategories = [
         {
@@ -571,31 +609,29 @@ export default function App() {
                   </span>
                                 </div>
 
-                                <div className="h-64 flex items-end gap-3 justify-between mt-6">
-                                    {[40, 70, 45, 90, 65, 100, 85].map((val, i) => (
-                                        <div
-                                            key={`${val}-${i}`}
-                                            className="w-full flex flex-col items-center gap-2 group"
-                                        >
-                      <span className="text-xs font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                        {val * 120}K
-                      </span>
+                                <div className="h-72 rounded-2xl bg-gradient-to-b from-slate-50 to-white border border-slate-100 p-4">
+                                    <div className="h-full grid grid-cols-7 items-end gap-3 border-b border-l border-slate-200 px-3 pt-6 pb-8 relative">
+                                        <div className="absolute left-3 right-3 top-1/3 border-t border-dashed border-slate-200" />
+                                        <div className="absolute left-3 right-3 top-2/3 border-t border-dashed border-slate-200" />
+                                        {monthlySales.map((item) => (
+                                            <div key={item.month} className="h-full flex flex-col items-center justify-end gap-2 group relative z-10">
+                                                <span className="text-[11px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-1 rounded-full shadow-sm opacity-100">
+                                                    {item.total}
+                                                </span>
 
-                                            <div
-                                                className="w-full bg-indigo-50 rounded-t-md relative flex justify-center group-hover:bg-indigo-100 transition-colors"
-                                                style={{ height: `${val}%` }}
-                                            >
-                                                <div
-                                                    className="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t-md absolute bottom-0 transition-all duration-1000 ease-out"
-                                                    style={{ height: '100%' }}
-                                                />
+                                                <div className="w-full max-w-10 flex-1 flex items-end">
+                                                    <div
+                                                        className="w-full min-h-6 rounded-t-xl bg-gradient-to-t from-indigo-600 via-violet-500 to-purple-400 shadow-lg shadow-indigo-500/20 group-hover:from-indigo-700 group-hover:to-fuchsia-500 transition-all"
+                                                        style={{ height: `${item.value}%` }}
+                                                    />
+                                                </div>
+
+                                                <span className="absolute -bottom-6 text-xs text-slate-500 font-semibold">
+                                                    {item.month}
+                                                </span>
                                             </div>
-
-                                            <span className="text-xs text-slate-500 font-medium">
-                        {['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul'][i]}
-                      </span>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -627,9 +663,68 @@ export default function App() {
                                 </div>
                             </div>
                         </div>
+
+                        {installedModules.length > 0 && (
+                            <div className="mt-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+                                    <div>
+                                        <h3 className="font-bold text-xl text-slate-900">Module instalate</h3>
+                                        <p className="text-sm text-slate-500">Fiecare modul afișează pagini demo cu date exemplu.</p>
+                                    </div>
+                                    <button type="button" onClick={() => setIsModulesOpen(true)} className="text-sm font-bold text-indigo-600 hover:text-indigo-800">+ Adaugă module</button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 mb-6">
+                                    {installedModules.map((moduleId) => (
+                                        <button
+                                            key={moduleId}
+                                            type="button"
+                                            onClick={() => setActiveModule(moduleId)}
+                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${
+                                                activeModule === moduleId
+                                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-indigo-300'
+                                            }`}
+                                        >
+                                            {moduleScreens[moduleId].title}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {activeModule && (
+                                    <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-5">
+                                        <h4 className="text-lg font-extrabold text-slate-900">{moduleScreens[activeModule].title}</h4>
+                                        <p className="text-sm text-slate-500 mt-1 mb-5">{moduleScreens[activeModule].subtitle}</p>
+
+                                        <div className="grid md:grid-cols-3 gap-3 mb-5">
+                                            {moduleScreens[activeModule].stats.map((stat) => (
+                                                <div key={stat} className="bg-white/80 rounded-xl border border-white p-4 font-bold text-slate-800 shadow-sm">
+                                                    {stat}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {moduleScreens[activeModule].rows.map((row) => (
+                                                <div key={row} className="bg-white rounded-xl border border-slate-100 p-4 text-sm text-slate-700 flex items-center justify-between gap-4">
+                                                    <span>{row}</span>
+                                                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Demo</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
+
+            <footer className="max-w-6xl mx-auto px-6 md:px-12 py-8 border-t border-slate-200 text-sm text-slate-500 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+                <span className="font-semibold text-slate-700">AI Workflows</span>
+                <span>Frontend demo pentru procesare documente, dashboard AI și module extensibile.</span>
+                <span>© 2026</span>
+            </footer>
 
             {isModulesOpen && (
                 <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
@@ -681,6 +776,8 @@ export default function App() {
                                                     if (!isInstalled) {
                                                         setInstalledModules((prev) => [...prev, mod.id]);
                                                     }
+                                                    setActiveModule(mod.id);
+                                                    setIsModulesOpen(false);
                                                 }}
                                                 className={`text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full transition-colors border ${
                                                     isInstalled
