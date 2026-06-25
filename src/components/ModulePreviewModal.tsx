@@ -1,30 +1,28 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { Config, Data } from '@measured/puck';
+import { useState, type ReactNode } from 'react';
 import {
     ArrowUpRight,
     BarChart3,
     Calendar,
     CreditCard,
     Edit3,
-    Lock,
-    ExternalLink,
     FileText,
     Plus,
-    Save,
-    ShoppingCart,
     Trash2,
     Truck,
     X
 } from 'lucide-react';
 import { marketplaceModules } from '../moduleData';
 import type { ModuleId } from '../types';
+import { EcommercePuckEditor } from './module-preview/puck/EcommercePuckEditor';
+import { LandingPuckEditor } from './module-preview/puck/LandingPuckEditor';
+import { initialCatalogItems, type CatalogItem } from './module-preview/puck/sharedCatalog';
 
 type Props = {
     activeModulePreview: ModuleId | null;
     onClose: () => void;
 };
 
-type CrmTab = 'leads' | 'orders' | 'customers';
+type CrmTab = 'leads' | 'orders' | 'customers' | 'catalog';
 type ErpTab = 'invoices' | 'inventory' | 'expenses';
 type LeadStatus = 'Nou' | 'Contactat' | 'Calificat' | 'Pierdut';
 type LeadSource = 'Website' | 'Recomandare' | 'Campanie' | 'Cold call';
@@ -34,8 +32,7 @@ type CustomerType = 'Prospect' | 'Activ' | 'Inactiv';
 type InvoiceStatus = 'Proformă' | 'Emisă' | 'Plătită' | 'Restantă' | 'Stornată';
 type InvoiceDocumentType = 'Factură' | 'Proformă';
 type ExpenseStatus = 'Neplătită' | 'Programată' | 'Plătită';
-type EcommerceBlockId = 'header' | 'hero' | 'categories' | 'products' | 'banner' | 'cart' | 'checkout';
-type LandingBlockId = 'hero' | 'benefits' | 'testimonials' | 'lead-form' | 'pricing' | 'faq' | 'final-cta' | 'footer';
+
 
 type Lead = {
     id: string;
@@ -100,47 +97,6 @@ type Expense = {
     paymentStatus: ExpenseStatus;
     costCenter: string;
 };
-
-type BuilderBlock<T extends string> = {
-    id: T;
-    label: string;
-    hint: string;
-    settings: Record<string, string>;
-    isActive?: boolean;
-};
-
-type BuilderTheme = {
-    title: string;
-    subtitle: string;
-    accentColor: string;
-    textColor: string;
-    backgroundColor: string;
-};
-
-type PuckComponentName = 'Hero' | 'ProductGrid' | 'CheckoutFlow' | 'LeadCapture' | 'ProofStack' | 'PricingCta';
-type BuilderPreset = { config: Config; data: Data; components: { name: PuckComponentName; description: string; fields: string[] }[] };
-
-const ecommercePuckPreset: BuilderPreset = {
-    config: { components: {} },
-    data: { content: [], root: { props: {} } },
-    components: [
-        { name: 'Hero', description: 'Hero comercial cu mesaj, badge de livrare și CTA mapate în Puck props.', fields: ['headline', 'supportingText', 'primaryCta', 'trustBadge'] },
-        { name: 'ProductGrid', description: 'Grid produse cu sortare, carduri, rating și reguli de stoc vizibile.', fields: ['columns', 'productSource', 'cardDensity', 'inventoryRule'] },
-        { name: 'CheckoutFlow', description: 'Flow checkout în pași, cu livrare, plată și mesaje de abandon coș.', fields: ['steps', 'paymentMethods', 'shippingPromise', 'abandonedCartCopy'] }
-    ]
-};
-
-const landingPuckPreset: BuilderPreset = {
-    config: { components: {} },
-    data: { content: [], root: { props: {} } },
-    components: [
-        { name: 'Hero', description: 'Secțiune de poziționare cu headline, audiență, CTA și imagine.', fields: ['headline', 'persona', 'primaryCta', 'visualDirection'] },
-        { name: 'LeadCapture', description: 'Formular serios cu câmpuri, consimțământ GDPR și rutare către CRM.', fields: ['fields', 'gdprCopy', 'crmPipeline', 'thankYouState'] },
-        { name: 'ProofStack', description: 'Dovezi sociale cu testimoniale, metrici și logo-uri de clienți.', fields: ['testimonials', 'metrics', 'logos', 'sourceNotes'] },
-        { name: 'PricingCta', description: 'Ofertă finală cu plan recomandat, garanție și CTA urmărit.', fields: ['planName', 'startingPrice', 'guarantee', 'trackingEvent'] }
-    ]
-};
-
 const emptyLead: Omit<Lead, 'id'> = {
     company: '',
     contactPerson: '',
@@ -199,6 +155,16 @@ const emptyExpense: Omit<Expense, 'id'> = {
     costCenter: ''
 };
 
+const emptyCatalogItem: Omit<CatalogItem, 'id'> = {
+    name: '',
+    sku: '',
+    category: '',
+    stock: 0,
+    minimumStock: 5,
+    supplier: 'GadgetHub.ro',
+    price: ''
+};
+
 const initialLeads: Lead[] = [
     { id: 'lead-1', company: 'GadgetHub.ro', contactPerson: 'Irina Popescu', contact: 'irina@gadgethub.ro', source: 'Website', interest: 'Magazin online', estimatedValue: '18,400 RON', status: 'Nou' },
     { id: 'lead-2', company: 'TechWear București', contactPerson: 'Andrei Ionescu', contact: 'andrei@techwear.ro', source: 'Campanie', interest: 'Magazin online', estimatedValue: '32,000 RON', status: 'Contactat' }
@@ -220,11 +186,15 @@ const initialInvoices: Invoice[] = [
     { id: 'invoice-3', documentType: 'Factură', number: 'FCT-2026-003', client: 'GadgetHub.ro', description: 'Lot smartwatch-uri și docking station-uri', value: '22,300 RON', vat: '19%', dueDate: '25 Iun 2026', status: 'Restantă' }
 ];
 
-const initialInventory: InventoryItem[] = [
-    { id: 'stock-1', productName: 'Laptop Carbon X', sku: 'LCX-14-PRO', category: 'Hardware', quantity: 42, minimumStock: 10, supplier: 'GadgetHub.ro' },
-    { id: 'stock-2', productName: 'Monitor UltraWide', sku: 'MUW-34', category: 'Hardware', quantity: 8, minimumStock: 12, supplier: 'GadgetHub.ro' },
-    { id: 'stock-3', productName: 'Docking Station AI', sku: 'DSAI-11P', category: 'Accesorii', quantity: 126, minimumStock: 30, supplier: 'GadgetHub.ro' }
-];
+const initialInventory: InventoryItem[] = initialCatalogItems.map((item) => ({
+    id: item.id,
+    productName: item.name,
+    sku: item.sku,
+    category: item.category,
+    quantity: item.stock,
+    minimumStock: item.minimumStock,
+    supplier: item.supplier
+}));
 
 const initialExpenses: Expense[] = [
     { id: 'expense-1', type: 'Garanții extinse laptopuri', supplier: 'CarbonTech Distribution', value: '3,200 RON', date: '20 Iun 2026', paymentStatus: 'Programată', costCenter: 'Operațional' },
@@ -232,121 +202,12 @@ const initialExpenses: Expense[] = [
     { id: 'expense-3', type: 'Curierat gadgeturi fragile', supplier: 'Rapid Gadget Courier', value: '1,780 RON', date: '24 Iun 2026', paymentStatus: 'Plătită', costCenter: 'Vânzări' }
 ];
 
-const ecommerceBlocks: BuilderBlock<EcommerceBlockId>[] = [
-    { id: 'header', isActive: true, label: 'Header', hint: 'Logo, navigație, coș', settings: { Logo: 'GadgetHub', Meniu: 'Produse, Oferte, Suport', 'Badge coș': '3 produse' } },
-    { id: 'hero', isActive: true, label: 'Hero promo', hint: 'Mesaj ofertă principală', settings: { Titlu: 'Gadgeturi premium', Subtitlu: 'Livrare gratuită peste 500 RON', 'Text buton': 'Cumpără acum' } },
-    { id: 'categories', isActive: false, label: 'Categorii', hint: 'Filtre vizuale pe categorii', settings: { Layout: 'Carduri compacte', Categorii: 'Laptopuri, Monitoare, Accesorii', 'Culoare accent': 'Emerald' } },
-    { id: 'products', isActive: true, label: 'Grid produse', hint: 'Carduri produs editabile', settings: { 'Produse pe rând': '3', Rating: 'Vizibil', 'Buton card': 'Adaugă în coș' } },
-    { id: 'banner', isActive: false, label: 'Banner ofertă', hint: 'Promoție limitată', settings: { Titlu: 'Upgrade pentru echipe', Discount: '-15%', Fundal: 'Gradient indigo' } },
-    { id: 'cart', isActive: false, label: 'Coș', hint: 'Sumar produse selectate', settings: { Stil: 'Drawer dreapta', 'Total demo gadgeturi': '12,497 RON', 'CTA coș': 'Continuă' } },
-    { id: 'checkout', isActive: false, label: 'Checkout', hint: 'Pași finalizare comandă', settings: { Pași: 'Date, Livrare, Plată', 'Metodă plată': 'Card', 'Text final': 'Finalizează comanda' } }
-];
-
-const landingBlocks: BuilderBlock<LandingBlockId>[] = [
-    { id: 'hero', isActive: true, label: 'Hero', hint: 'Headline și CTA principal', settings: { Headline: 'Vinde gadgeturi mai rapid', CTA: 'Programează demo', Imagine: 'Catalog gadgeturi' } },
-    { id: 'benefits', isActive: true, label: 'Beneficii', hint: 'Carduri valori cheie', settings: { 'Număr carduri': '3', Layout: 'Grid', Iconuri: 'Lucide minimal' } },
-    { id: 'testimonials', isActive: false, label: 'Testimoniale', hint: 'Dovezi sociale', settings: { Format: 'Carousel static', 'Număr citate': '2', Ton: 'B2B' } },
-    { id: 'lead-form', isActive: false, label: 'Formular lead generation', hint: 'Captură lead', settings: { Câmpuri: 'Nume, Email, Companie', 'Text formular': 'Primește audit gratuit', GDPR: 'Activ' } },
-    { id: 'pricing', isActive: false, label: 'Pricing / Ofertă', hint: 'Plan recomandat', settings: { Preț: 'De la 499 RON/lună', Badge: 'Popular', CTA: 'Alege planul' } },
-    { id: 'faq', isActive: false, label: 'FAQ', hint: 'Întrebări frecvente', settings: { 'Număr întrebări': '4', Layout: 'Accordion demo', Ton: 'Clar' } },
-    { id: 'final-cta', isActive: true, label: 'CTA final', hint: 'Închidere conversie', settings: { Headline: 'Gata să începi?', CTA: 'Discută cu un consultant', Fundal: 'Indigo' } },
-    { id: 'footer', isActive: false, label: 'Footer', hint: 'Link-uri și legal', settings: { Coloane: '3', 'Link legal': 'Termeni', Social: 'LinkedIn' } }
-];
-
-
-const defaultEcommerceTheme: BuilderTheme = {
-    title: 'Gadgeturi premium pentru echipe moderne.',
-    subtitle: 'Magazin demo cu carduri de produs, filtre, coș și checkout vizual.',
-    accentColor: '#34d399',
-    textColor: '#ffffff',
-    backgroundColor: '#020617'
-};
-
-const defaultLandingTheme: BuilderTheme = {
-    title: 'Transformă catalogul GadgetHub în comenzi online în câteva minute.',
-    subtitle: 'Hero, beneficii și call-to-action într-o pagină completă generată cu date demo despre gadgeturi.',
-    accentColor: '#ffffff',
-    textColor: '#ffffff',
-    backgroundColor: '#312e81'
-};
-
-const builderThemeKeys = {
-    ecommerce: 'workflows-ai:ecommerce-builder-theme',
-    landing: 'workflows-ai:landing-builder-theme'
-} as const;
-
-const openThemeDb = () => new Promise<IDBDatabase | null>((resolve) => {
-    if (!('indexedDB' in window)) {
-        resolve(null);
-        return;
-    }
-    const request = indexedDB.open('workflows-ai-builder', 1);
-    request.onupgradeneeded = () => request.result.createObjectStore('settings');
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
-});
-
-const loadThemeFromDb = async (key: string) => {
-    const db = await openThemeDb();
-    if (!db) return null;
-    return new Promise<BuilderTheme | null>((resolve) => {
-        const request = db.transaction('settings', 'readonly').objectStore('settings').get(key);
-        request.onsuccess = () => resolve((request.result as BuilderTheme | undefined) ?? null);
-        request.onerror = () => resolve(null);
-    });
-};
-
-const saveThemeToDb = async (key: string, theme: BuilderTheme) => {
-    const db = await openThemeDb();
-    if (!db) return;
-    await new Promise<void>((resolve) => {
-        const request = db.transaction('settings', 'readwrite').objectStore('settings').put(theme, key);
-        request.onsuccess = () => resolve();
-        request.onerror = () => resolve();
-    });
-};
-
-const useBuilderTheme = (key: string, fallback: BuilderTheme) => {
-    const [theme, setTheme] = useState<BuilderTheme>(fallback);
-    const [saveStatus, setSaveStatus] = useState('Nesalvat');
-
-    useEffect(() => {
-        let isMounted = true;
-        loadThemeFromDb(key).then((savedTheme) => {
-            if (isMounted && savedTheme) setTheme(savedTheme);
-        });
-        return () => { isMounted = false; };
-    }, [key]);
-
-    const saveTheme = async () => {
-        await saveThemeToDb(key, theme);
-        setSaveStatus('Salvat în IndexedDB');
-        window.setTimeout(() => setSaveStatus('Nesalvat'), 1800);
-    };
-
-    return { theme, setTheme, saveTheme, saveStatus };
-};
-
-const openHtmlPreview = (title: string, body: string) => {
-    const previewWindow = window.open('', '_blank');
-    if (!previewWindow) return;
-
-    previewWindow.document.write(`<!doctype html><html lang="ro"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>${title}</title><script src="https://cdn.tailwindcss.com"></script></head><body>${body}</body></html>`);
-    previewWindow.document.close();
-};
-
-const openEcommerceStorePreview = (theme = defaultEcommerceTheme) => {
-    openHtmlPreview('Preview magazin eCommerce', `<main style="background:${theme.backgroundColor};color:${theme.textColor}" class="min-h-screen"><nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6"><strong class="text-2xl">GadgetHub Store</strong><div class="hidden gap-6 text-sm text-slate-300 md:flex"><span>Produse</span><span>Oferte</span><span>Suport</span></div><button class="rounded-full bg-white px-5 py-2 font-bold text-slate-950">Coș (3)</button></nav><section class="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-2"><div><p class="mb-4 inline-flex rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">Livrare gratuită peste 500 RON</p><h1 class="text-5xl font-black leading-tight md:text-7xl">${theme.title}</h1><p class="mt-6 text-lg text-slate-300">${theme.subtitle}</p><button style="background:${theme.accentColor}" class="mt-8 rounded-2xl px-7 py-4 font-black text-slate-950">Cumpără acum</button></div><div class="rounded-[2rem] bg-gradient-to-br from-indigo-500 to-emerald-400 p-8 shadow-2xl"><div class="rounded-3xl bg-white/15 p-6 backdrop-blur"><p class="text-sm text-white/80">Produs recomandat</p><h2 class="mt-3 text-3xl font-black">Smartwatch Pro X</h2><p class="mt-16 text-5xl font-black">8.999 RON</p></div></div></section><section class="mx-auto grid max-w-6xl gap-5 px-6 pb-20 md:grid-cols-3">${['Laptop Carbon X','Monitor UltraWide','Docking Station AI'].map((p,i)=>`<article class="rounded-3xl bg-white p-5 text-slate-950 shadow-xl"><div class="mb-5 h-44 rounded-2xl bg-gradient-to-br ${i===0?'from-blue-100 to-indigo-200':i===1?'from-emerald-100 to-cyan-200':'from-amber-100 to-pink-200'}"></div><h3 class="text-xl font-black">${p}</h3><p class="mt-2 text-sm text-slate-500">Stoc disponibil • rating 4.9</p><div class="mt-5 flex items-center justify-between"><strong>${(i+2)*1499} RON</strong><button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white">Adaugă</button></div></article>`).join('')}</section></main>`);
-};
-
-const openLandingFullPreview = (theme = defaultLandingTheme) => {
-    openHtmlPreview('Preview landing page', `<main class="min-h-screen bg-white"><section style="background:${theme.backgroundColor};color:${theme.textColor}" class="px-6 py-24"><div class="mx-auto max-w-5xl text-center"><span class="rounded-full bg-white/10 px-4 py-2 text-sm font-bold">Landing page demo full-screen</span><h1 class="mt-8 text-5xl font-black leading-tight md:text-7xl">${theme.title}</h1><p class="mx-auto mt-6 max-w-2xl text-xl opacity-80">${theme.subtitle}</p><button style="background:${theme.accentColor}" class="mt-10 rounded-2xl px-8 py-4 font-black text-indigo-950">Programează demo</button></div></section><section class="mx-auto grid max-w-6xl gap-6 px-6 py-20 md:grid-cols-3">${['Analiză instant','Rapoarte AI','Integrări rapide'].map(t=>`<div class="rounded-3xl border border-slate-200 p-8 shadow-sm"><h2 class="text-2xl font-black text-slate-900">${t}</h2><p class="mt-3 text-slate-500">Conținut demo bazat pe datele GadgetHub.ro.</p></div>`).join('')}</section><section class="bg-slate-50 px-6 py-20 text-center"><h2 class="text-4xl font-black text-slate-900">Gata să începi?</h2><p class="mt-3 text-slate-500">Acesta este preview-ul într-o pagină separată.</p></section></main>`);
-};
-
 const createId = (prefix: string) =>
     `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
+    const [catalogItems, setCatalogItems] = useState<CatalogItem[]>(initialCatalogItems);
+
     if (!activeModulePreview) return null;
 
     const activeModule = marketplaceModules.find((module) => module.id === activeModulePreview);
@@ -362,8 +223,8 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                     <button onClick={onClose} className="rounded-full p-2 hover:bg-slate-100"><X className="h-5 w-5" /></button>
                 </div>
 
-                {activeModulePreview === 'crm' && <CrmPreview />}
-                {activeModulePreview === 'ecommerce' && <EcommerceBuilderPreview />}
+                {activeModulePreview === 'crm' && <CrmPreview catalogItems={catalogItems} onCatalogItemsChange={setCatalogItems} />}
+                {activeModulePreview === 'ecommerce' && <EcommerceBuilderPreview catalogItems={catalogItems} />}
                 {activeModulePreview === 'erp' && <ErpPreview />}
                 {activeModulePreview === 'landing' && <LandingBuilderPreview />}
             </div>
@@ -371,7 +232,7 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
     );
 }
 
-function CrmPreview() {
+function CrmPreview({ catalogItems, onCatalogItemsChange }: { catalogItems: CatalogItem[]; onCatalogItemsChange: (items: CatalogItem[]) => void }) {
     const [activeCrmTab, setActiveCrmTab] = useState<CrmTab>('leads');
     const [leads, setLeads] = useState<Lead[]>(initialLeads);
     const [orders, setOrders] = useState<Order[]>(initialOrders);
@@ -382,6 +243,8 @@ function CrmPreview() {
     const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
     const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
     const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
+    const [catalogDraft, setCatalogDraft] = useState<Omit<CatalogItem, 'id'>>(emptyCatalogItem);
+    const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
 
     const convertLeadToCustomer = (lead: Lead) => {
         setCustomers((prev) => [...prev, { id: createId('customer'), company: lead.company, fiscalCode: 'RO-DUMMY', contactPerson: lead.contactPerson, email: lead.contact.includes('@') ? lead.contact : 'contact@client-demo.ro', phone: lead.contact.includes('@') ? '0700 000 000' : lead.contact, type: 'Prospect', totalContractsValue: lead.estimatedValue }]);
@@ -396,16 +259,17 @@ function CrmPreview() {
                 <MetricCard color="emerald" label="Comenzi în lucru" value={`${orders.filter((order) => order.status === 'În lucru' || order.status === 'Confirmată').length}`} change="flux operațional" />
                 <MetricCard color="purple" label="Clienți activi" value={`${customers.filter((customer) => customer.type === 'Activ').length}`} change="portofoliu curat" />
             </div>
-            <CrmTabs activeTab={activeCrmTab} onTabChange={setActiveCrmTab} counts={{ leads: leads.length, orders: orders.length, customers: customers.length }} />
+            <CrmTabs activeTab={activeCrmTab} onTabChange={setActiveCrmTab} counts={{ leads: leads.length, orders: orders.length, customers: customers.length, catalog: catalogItems.length }} />
             {activeCrmTab === 'leads' && <LeadForm leads={leads} draft={leadDraft} editingId={editingLeadId} onDraftChange={setLeadDraft} onSubmit={() => { if (!leadDraft.company.trim()) return; setLeads((prev) => editingLeadId ? prev.map((lead) => lead.id === editingLeadId ? { ...leadDraft, id: editingLeadId } : lead) : [...prev, { ...leadDraft, id: createId('lead') }]); setEditingLeadId(null); setLeadDraft(emptyLead); }} onEdit={(lead) => { setEditingLeadId(lead.id); setLeadDraft(lead); }} onDelete={(id) => setLeads((prev) => prev.filter((lead) => lead.id !== id))} onQualify={(id) => setLeads((prev) => prev.map((lead) => lead.id === id ? { ...lead, status: 'Calificat' } : lead))} onConvert={convertLeadToCustomer} />}
             {activeCrmTab === 'orders' && <OrderForm orders={orders} draft={orderDraft} editingId={editingOrderId} onDraftChange={setOrderDraft} onSubmit={() => { if (!orderDraft.customer.trim()) return; setOrders((prev) => editingOrderId ? prev.map((order) => order.id === editingOrderId ? { ...orderDraft, id: editingOrderId } : order) : [...prev, { ...orderDraft, id: createId('order') }]); setEditingOrderId(null); setOrderDraft(emptyOrder); }} onEdit={(order) => { setEditingOrderId(order.id); setOrderDraft(order); }} onDelete={(id) => setOrders((prev) => prev.filter((order) => order.id !== id))} onStatusChange={(id, status) => setOrders((prev) => prev.map((order) => order.id === id ? { ...order, status } : order))} />}
             {activeCrmTab === 'customers' && <CustomerForm customers={customers} draft={customerDraft} editingId={editingCustomerId} onDraftChange={setCustomerDraft} onSubmit={() => { if (!customerDraft.company.trim()) return; setCustomers((prev) => editingCustomerId ? prev.map((customer) => customer.id === editingCustomerId ? { ...customerDraft, id: editingCustomerId } : customer) : [...prev, { ...customerDraft, id: createId('customer') }]); setEditingCustomerId(null); setCustomerDraft(emptyCustomer); }} onEdit={(customer) => { setEditingCustomerId(customer.id); setCustomerDraft(customer); }} onDelete={(id) => setCustomers((prev) => prev.filter((customer) => customer.id !== id))} />}
+            {activeCrmTab === 'catalog' && <CatalogForm catalogItems={catalogItems} draft={catalogDraft} editingId={editingCatalogItemId} onDraftChange={setCatalogDraft} onSubmit={() => { if (!catalogDraft.name.trim()) return; onCatalogItemsChange(editingCatalogItemId ? catalogItems.map((item) => item.id === editingCatalogItemId ? { ...catalogDraft, id: editingCatalogItemId } : item) : [...catalogItems, { ...catalogDraft, id: createId('catalog') }]); setEditingCatalogItemId(null); setCatalogDraft(emptyCatalogItem); }} onEdit={(item) => { setEditingCatalogItemId(item.id); setCatalogDraft({ name: item.name, sku: item.sku, category: item.category, stock: item.stock, minimumStock: item.minimumStock, supplier: item.supplier, price: item.price }); }} onDelete={(id) => onCatalogItemsChange(catalogItems.filter((item) => item.id !== id))} />}
         </div>
     );
 }
 
 function CrmTabs({ activeTab, onTabChange, counts }: { activeTab: CrmTab; onTabChange: (tab: CrmTab) => void; counts: Record<CrmTab, number> }) {
-    return <TabBar tabs={[{ id: 'leads', label: 'Lead-uri', count: counts.leads }, { id: 'orders', label: 'Comenzi', count: counts.orders }, { id: 'customers', label: 'Clienți', count: counts.customers }]} activeTab={activeTab} onTabChange={onTabChange} />;
+    return <TabBar tabs={[{ id: 'leads', label: 'Lead-uri', count: counts.leads }, { id: 'orders', label: 'Comenzi', count: counts.orders }, { id: 'customers', label: 'Clienți', count: counts.customers }, { id: 'catalog', label: 'Catalog produse', count: counts.catalog }]} activeTab={activeTab} onTabChange={onTabChange} />;
 }
 
 function LeadForm({ leads, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete, onQualify, onConvert }: { leads: Lead[]; draft: Omit<Lead, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Lead, 'id'>) => void; onSubmit: () => void; onEdit: (lead: Lead) => void; onDelete: (id: string) => void; onQualify: (id: string) => void; onConvert: (lead: Lead) => void }) {
@@ -418,6 +282,11 @@ function OrderForm({ orders, draft, editingId, onDraftChange, onSubmit, onEdit, 
 
 function CustomerForm({ customers, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete }: { customers: Customer[]; draft: Omit<Customer, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Customer, 'id'>) => void; onSubmit: () => void; onEdit: (customer: Customer) => void; onDelete: (id: string) => void }) {
     return <section className="rounded-3xl border border-purple-100 bg-purple-50/50 p-5"><FormHeader title="Clienți" description="Portofoliu cu date fiscale, contact și sumar comercial." buttonLabel={editingId ? 'Salvează client' : 'Adaugă client'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-4"><TextInput value={draft.company} onChange={(company) => onDraftChange({ ...draft, company })} placeholder="Companie" /><TextInput value={draft.fiscalCode} onChange={(fiscalCode) => onDraftChange({ ...draft, fiscalCode })} placeholder="CUI" /><TextInput value={draft.contactPerson} onChange={(contactPerson) => onDraftChange({ ...draft, contactPerson })} placeholder="Persoană contact" /><TextInput value={draft.email} onChange={(email) => onDraftChange({ ...draft, email })} placeholder="Email" /><TextInput value={draft.phone} onChange={(phone) => onDraftChange({ ...draft, phone })} placeholder="Telefon" /><SelectInput value={draft.type} onChange={(type) => onDraftChange({ ...draft, type: type as CustomerType })} options={['Prospect', 'Activ', 'Inactiv']} /><TextInput value={draft.totalContractsValue} onChange={(totalContractsValue) => onDraftChange({ ...draft, totalContractsValue })} placeholder="Valoare contracte" /></div><div className="mt-5 grid gap-3 lg:grid-cols-2">{customers.map((customer) => <EntityCard key={customer.id} title={customer.company} subtitle={`${customer.contactPerson} • ${customer.email} • ${customer.phone}`} badge={customer.type} meta={`CUI ${customer.fiscalCode} • Contracte ${customer.totalContractsValue}`} onEdit={() => onEdit(customer)} onDelete={() => onDelete(customer.id)} extraActions={<button className="rounded-lg bg-purple-50 px-3 py-2 text-xs font-bold text-purple-700">Vezi sumar</button>} />)}</div></section>;
+}
+
+
+function CatalogForm({ catalogItems, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete }: { catalogItems: CatalogItem[]; draft: Omit<CatalogItem, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<CatalogItem, 'id'>) => void; onSubmit: () => void; onEdit: (item: CatalogItem) => void; onDelete: (id: string) => void }) {
+    return <section className="rounded-3xl border border-cyan-100 bg-cyan-50/50 p-5"><FormHeader title="Catalog produse CRM" description="Sursa comună pentru articolele disponibile în CRM și în magazinul eCommerce." buttonLabel={editingId ? 'Salvează produs' : 'Adaugă produs'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-4"><TextInput value={draft.name} onChange={(name) => onDraftChange({ ...draft, name })} placeholder="Nume produs" /><TextInput value={draft.sku} onChange={(sku) => onDraftChange({ ...draft, sku })} placeholder="SKU" /><TextInput value={draft.category} onChange={(category) => onDraftChange({ ...draft, category })} placeholder="Categorie" /><TextInput value={draft.price} onChange={(price) => onDraftChange({ ...draft, price })} placeholder="Preț" /><NumberInput value={draft.stock} onChange={(stock) => onDraftChange({ ...draft, stock })} placeholder="Stoc" /><NumberInput value={draft.minimumStock} onChange={(minimumStock) => onDraftChange({ ...draft, minimumStock })} placeholder="Stoc minim" /><TextInput value={draft.supplier} onChange={(supplier) => onDraftChange({ ...draft, supplier })} placeholder="Furnizor" /></div><DataTable headers={['Produs', 'SKU', 'Categorie', 'Stoc', 'Preț', 'Furnizor', 'Acțiuni']}>{catalogItems.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="p-3 font-bold">{item.name}</td><td className="p-3">{item.sku}</td><td className="p-3">{item.category}</td><td className="p-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${item.stock <= item.minimumStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{item.stock} buc.</span></td><td className="p-3 font-semibold">{item.price}</td><td className="p-3">{item.supplier}</td><td className="p-3"><RowActions onEdit={() => onEdit(item)} onDelete={() => onDelete(item.id)} /></td></tr>)}</DataTable></section>;
 }
 
 function ErpPreview() {
@@ -665,73 +534,14 @@ function ExpenseForm({ expenses, draft, editingId, onDraftChange, onSubmit, onEd
     );
 }
 
-function EcommerceBuilderPreview() {
-    const [selectedEcommerceBlock, setSelectedEcommerceBlock] = useState<EcommerceBlockId>('hero');
-    const { theme, setTheme, saveTheme, saveStatus } = useBuilderTheme(builderThemeKeys.ecommerce, defaultEcommerceTheme);
-    const selectedBlock = ecommerceBlocks.find((block) => block.id === selectedEcommerceBlock) ?? ecommerceBlocks[0];
-    const puckPreset = useMemo(() => ecommercePuckPreset, []);
-
-    return <BuilderShell title="GadgetHub Store" eyebrow="Puck eCommerce Builder" onPreview={() => openEcommerceStorePreview(theme)} onSave={saveTheme} saveStatus={saveStatus} sidebar={<BuilderSidebar<EcommerceBlockId> blocks={ecommerceBlocks} selectedId={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} />} canvas={<BuilderCanvas><EcommerceCanvas selectedBlock={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} theme={theme} puckPreset={puckPreset} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={selectedBlock} theme={theme} onThemeChange={setTheme} puckPreset={puckPreset} />} />;
+function EcommerceBuilderPreview({ catalogItems }: { catalogItems: CatalogItem[] }) {
+    return <EcommercePuckEditor catalogItems={catalogItems} />;
 }
 
 function LandingBuilderPreview() {
-    const [selectedLandingBlock, setSelectedLandingBlock] = useState<LandingBlockId>('hero');
-    const { theme, setTheme, saveTheme, saveStatus } = useBuilderTheme(builderThemeKeys.landing, defaultLandingTheme);
-    const selectedBlock = landingBlocks.find((block) => block.id === selectedLandingBlock) ?? landingBlocks[0];
-    const puckPreset = useMemo(() => landingPuckPreset, []);
-
-    return <BuilderShell title="AI Operations Landing" eyebrow="Puck Landing Builder" onPreview={() => openLandingFullPreview(theme)} onSave={saveTheme} saveStatus={saveStatus} sidebar={<BuilderSidebar<LandingBlockId> blocks={landingBlocks} selectedId={selectedLandingBlock} onSelect={setSelectedLandingBlock} />} canvas={<BuilderCanvas><LandingCanvas selectedBlock={selectedLandingBlock} onSelect={setSelectedLandingBlock} theme={theme} puckPreset={puckPreset} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={selectedBlock} theme={theme} onThemeChange={setTheme} puckPreset={puckPreset} />} />;
+    return <LandingPuckEditor />;
 }
 
-function BuilderShell({ title, eyebrow, sidebar, canvas, properties, onPreview, onSave, saveStatus }: { title: string; eyebrow: string; sidebar: ReactNode; canvas: ReactNode; properties: ReactNode; onPreview: () => void; onSave: () => void; saveStatus: string }) {
-    return <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50"><div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">{eyebrow}</p><h3 className="text-xl font-black text-slate-900">{title}</h3><p className="mt-1 text-xs font-semibold text-slate-400">{saveStatus}</p></div><div className="flex gap-2"><button onClick={onSave} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"><Save className="h-4 w-4" /> Save</button><button onClick={onPreview} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"><ExternalLink className="h-4 w-4" /> Preview</button></div></div><div className="grid min-h-[620px] gap-0 lg:grid-cols-[240px_1fr_280px]">{sidebar}{canvas}{properties}</div></div>;
-}
-
-function BuilderSidebar<T extends string>({ blocks, selectedId, onSelect }: { blocks: BuilderBlock<T>[]; selectedId: T; onSelect: (id: T) => void }) {
-    return <aside className="border-b border-slate-200 bg-white p-4 lg:border-b-0 lg:border-r"><h4 className="mb-3 text-sm font-black text-slate-900">Secțiuni / componente</h4><div className="space-y-2">{blocks.map((block) => {
-        const isLocked = block.isActive === false;
-        return <button key={block.id} type="button" disabled={isLocked} onClick={() => onSelect(block.id)} className={`w-full rounded-2xl border p-3 text-left transition ${isLocked ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400 opacity-75' : selectedId === block.id ? 'border-indigo-200 bg-indigo-50 text-indigo-900' : 'border-slate-100 bg-white text-slate-700 hover:bg-slate-50'}`}><span className="flex items-center justify-between gap-2 text-sm font-black"><span>{block.label}</span>{isLocked && <Lock className="h-3.5 w-3.5" />}</span><span className="text-xs text-slate-500">{isLocked ? 'Blocat momentan — nu apare în preview.' : block.hint}</span></button>;
-    })}</div></aside>;
-}
-
-function BuilderCanvas({ children }: { children: ReactNode }) {
-    return <main className="bg-slate-100 p-4"><div className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">{children}</div></main>;
-}
-
-function BuilderPropertiesPanel<T extends string>({ block, theme, onThemeChange, puckPreset }: { block: BuilderBlock<T>; theme: BuilderTheme; onThemeChange: (theme: BuilderTheme) => void; puckPreset: BuilderPreset }) {
-    const isLocked = block.isActive === false;
-
-    return <aside className="border-t border-slate-200 bg-white p-4 lg:border-l lg:border-t-0"><h4 className="text-sm font-black text-slate-900">Proprietăți</h4><p className="mt-1 text-xs text-slate-500">Setări demo GadgetHub pentru: {block.label}</p>{isLocked && <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">Componentă blocată: nu este prezentă în preview-ul deschis în fereastră separată.</div>}<div className="mt-4 space-y-3 opacity-100">{Object.entries(block.settings).map(([key, value]) => <label key={key} className="block"><span className="text-xs font-bold text-slate-500">{key}</span><input readOnly value={value} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700" /></label>)}</div><div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3"><div className="flex items-center justify-between gap-2"><h5 className="text-xs font-black uppercase tracking-wide text-indigo-700">Puck component model</h5><span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-indigo-600">{puckPreset.components.length} componente</span></div><div className="mt-3 space-y-2">{puckPreset.components.map((component) => <div key={component.name} className="rounded-xl bg-white p-3 shadow-sm"><p className="text-sm font-black text-slate-900">{component.name}</p><p className="mt-1 text-xs text-slate-500">{component.description}</p><div className="mt-2 flex flex-wrap gap-1">{component.fields.map((field) => <span key={field} className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">{field}</span>)}</div></div>)}</div></div><div className="mt-6 border-t border-slate-100 pt-4"><h5 className="text-xs font-black uppercase tracking-wide text-slate-500">Text & culori live</h5><label className="mt-3 block"><span className="text-xs font-bold text-slate-500">Titlu</span><textarea value={theme.title} onChange={(event) => onThemeChange({ ...theme, title: event.target.value })} className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-300" /></label><label className="mt-3 block"><span className="text-xs font-bold text-slate-500">Descriere</span><textarea value={theme.subtitle} onChange={(event) => onThemeChange({ ...theme, subtitle: event.target.value })} className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-300" /></label><div className="mt-3 grid grid-cols-3 gap-2">{([['accentColor', 'Accent'], ['textColor', 'Text'], ['backgroundColor', 'Fundal']] as const).map(([key, label]) => <label key={key} className="text-xs font-bold text-slate-500">{label}<input type="color" value={theme[key]} onChange={(event) => onThemeChange({ ...theme, [key]: event.target.value })} className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white p-1" /></label>)}</div></div></aside>;
-}
-
-function EcommerceCanvas({ selectedBlock, onSelect, theme, puckPreset }: { selectedBlock: EcommerceBlockId; onSelect: (block: EcommerceBlockId) => void; theme: BuilderTheme; puckPreset: BuilderPreset }) {
-    return <div className="space-y-3 text-slate-900"><div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-3 text-xs font-bold text-indigo-700">Puck schema activ: {puckPreset.components.map((component) => component.name).join(' · ')}</div><CanvasSection id="header" selectedId={selectedBlock} onSelect={onSelect}><div className="flex items-center justify-between"><strong>GadgetHub</strong><div className="flex gap-3 text-xs text-slate-500"><span>Produse</span><span>Oferte</span><span>Suport</span></div><ShoppingCart className="h-4 w-4" /></div></CanvasSection><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl p-6" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}><p className="text-xs font-bold opacity-80">Livrare gratuită peste 500 RON</p><h1 className="mt-2 text-3xl font-black">{theme.title}</h1><p className="mt-2 text-sm opacity-75">{theme.subtitle}</p><button className="mt-4 rounded-xl px-4 py-2 text-sm font-black text-slate-950" style={{ backgroundColor: theme.accentColor }}>Cumpără acum</button></div></CanvasSection><CanvasSection id="products" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-3 md:grid-cols-3">{['Laptop Carbon X', 'Monitor UltraWide', 'Docking AI'].map((product, index) => <div key={product} className="rounded-2xl border border-slate-100 p-3"><div className={`h-20 rounded-xl ${index === 0 ? 'bg-blue-100' : index === 1 ? 'bg-emerald-100' : 'bg-amber-100'}`} /><p className="mt-2 text-sm font-black">{product}</p><p className="text-xs text-slate-500">{(index + 2) * 1499} RON</p></div>)}</div></CanvasSection></div>;
-}
-
-function LandingCanvas({ selectedBlock, onSelect, theme, puckPreset }: { selectedBlock: LandingBlockId; onSelect: (block: LandingBlockId) => void; theme: BuilderTheme; puckPreset: BuilderPreset }) {
-    return <div className="space-y-3 text-slate-900"><div className="rounded-2xl border border-purple-100 bg-purple-50 p-3 text-xs font-bold text-purple-700">Puck schema activ: {puckPreset.components.map((component) => component.name).join(' · ')}</div><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl p-8 text-center" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}><p className="text-xs font-bold opacity-80">AI Generated</p><h1 className="mt-2 text-3xl font-black">{theme.title}</h1><p className="mt-2 text-sm opacity-75">{theme.subtitle}</p><button className="mt-4 rounded-xl px-4 py-2 text-sm font-black text-indigo-950" style={{ backgroundColor: theme.accentColor }}>Programează demo</button></div></CanvasSection><CanvasSection id="benefits" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-2 md:grid-cols-3">{['Analiză instant', 'Rapoarte AI', 'Integrări rapide'].map((item) => <div key={item} className="rounded-xl border border-slate-100 p-3 text-sm font-bold">{item}</div>)}</div></CanvasSection><CanvasSection id="final-cta" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-slate-950 p-5 text-center text-white"><strong>Gata să începi?</strong><p className="text-sm text-slate-300">Discută cu echipa GadgetHub despre oferta de gadgeturi.</p></div></CanvasSection></div>;
-}
-
-function CanvasSection<T extends string>({ id, selectedId, onSelect, children }: { id: T; selectedId: T; onSelect: (id: T) => void; children: ReactNode }) {
-    const selectSection = () => onSelect(id);
-
-    return (
-        <div
-            role="button"
-            tabIndex={0}
-            onClick={selectSection}
-            onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    selectSection();
-                }
-            }}
-            className={`block w-full cursor-pointer rounded-2xl border-2 p-2 text-left transition ${selectedId === id ? 'border-indigo-500 bg-indigo-50/60 shadow-sm' : 'border-transparent hover:border-slate-200'}`}
-        >
-            {children}
-        </div>
-    );
-}
 
 function MetricCard({ color, label, value, change }: { color: 'blue' | 'emerald' | 'purple'; label: string; value: string; change: string }) {
     const classes = { blue: 'bg-blue-50 border-blue-100 text-blue-900', emerald: 'bg-emerald-50 border-emerald-100 text-emerald-900', purple: 'bg-purple-50 border-purple-100 text-purple-900' }[color];
