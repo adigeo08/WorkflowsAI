@@ -1,4 +1,4 @@
-import { ArrowLeft, LockKeyhole, Mail } from 'lucide-react';
+import { ArrowLeft, Clock3, LockKeyhole, Mail } from 'lucide-react';
 
 type Props = {
     onBack: () => void;
@@ -39,8 +39,9 @@ export function AuthStep({ onBack }: Props) {
                     <button disabled type="button" className="cursor-not-allowed text-sm font-bold text-slate-400">Am uitat parola</button>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-bold text-amber-800">
-                    Lucrăm la această funcționalitate — autentificarea va fi disponibilă în curând.
+                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm text-slate-500">
+                    <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <p><span className="font-bold text-slate-700">Autentificarea este în pregătire.</span> Revenim curând cu acces securizat.</p>
                 </div>
 
                 <button disabled type="button" className="mt-6 flex w-full cursor-not-allowed items-center justify-center rounded-2xl bg-slate-200 px-6 py-4 text-base font-black text-slate-400">

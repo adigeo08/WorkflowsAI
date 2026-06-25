@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
     ArrowUpRight,
     BarChart3,
     Calendar,
     CreditCard,
     Edit3,
+    Lock,
     ExternalLink,
     FileText,
     Plus,
@@ -104,6 +105,15 @@ type BuilderBlock<T extends string> = {
     label: string;
     hint: string;
     settings: Record<string, string>;
+    isActive?: boolean;
+};
+
+type BuilderTheme = {
+    title: string;
+    subtitle: string;
+    accentColor: string;
+    textColor: string;
+    backgroundColor: string;
 };
 
 const emptyLead: Omit<Lead, 'id'> = {
@@ -198,25 +208,99 @@ const initialExpenses: Expense[] = [
 ];
 
 const ecommerceBlocks: BuilderBlock<EcommerceBlockId>[] = [
-    { id: 'header', label: 'Header', hint: 'Logo, navigație, coș', settings: { Logo: 'GadgetHub', Meniu: 'Produse, Oferte, Suport', 'Badge coș': '3 produse' } },
-    { id: 'hero', label: 'Hero promo', hint: 'Mesaj ofertă principală', settings: { Titlu: 'Gadgeturi premium', Subtitlu: 'Livrare gratuită peste 500 RON', 'Text buton': 'Cumpără acum' } },
-    { id: 'categories', label: 'Categorii', hint: 'Filtre vizuale pe categorii', settings: { Layout: 'Carduri compacte', Categorii: 'Laptopuri, Monitoare, Accesorii', 'Culoare accent': 'Emerald' } },
-    { id: 'products', label: 'Grid produse', hint: 'Carduri produs editabile', settings: { 'Produse pe rând': '3', Rating: 'Vizibil', 'Buton card': 'Adaugă în coș' } },
-    { id: 'banner', label: 'Banner ofertă', hint: 'Promoție limitată', settings: { Titlu: 'Upgrade pentru echipe', Discount: '-15%', Fundal: 'Gradient indigo' } },
-    { id: 'cart', label: 'Coș', hint: 'Sumar produse selectate', settings: { Stil: 'Drawer dreapta', 'Total demo gadgeturi': '12,497 RON', 'CTA coș': 'Continuă' } },
-    { id: 'checkout', label: 'Checkout', hint: 'Pași finalizare comandă', settings: { Pași: 'Date, Livrare, Plată', 'Metodă plată': 'Card', 'Text final': 'Finalizează comanda' } }
+    { id: 'header', isActive: true, label: 'Header', hint: 'Logo, navigație, coș', settings: { Logo: 'GadgetHub', Meniu: 'Produse, Oferte, Suport', 'Badge coș': '3 produse' } },
+    { id: 'hero', isActive: true, label: 'Hero promo', hint: 'Mesaj ofertă principală', settings: { Titlu: 'Gadgeturi premium', Subtitlu: 'Livrare gratuită peste 500 RON', 'Text buton': 'Cumpără acum' } },
+    { id: 'categories', isActive: false, label: 'Categorii', hint: 'Filtre vizuale pe categorii', settings: { Layout: 'Carduri compacte', Categorii: 'Laptopuri, Monitoare, Accesorii', 'Culoare accent': 'Emerald' } },
+    { id: 'products', isActive: true, label: 'Grid produse', hint: 'Carduri produs editabile', settings: { 'Produse pe rând': '3', Rating: 'Vizibil', 'Buton card': 'Adaugă în coș' } },
+    { id: 'banner', isActive: false, label: 'Banner ofertă', hint: 'Promoție limitată', settings: { Titlu: 'Upgrade pentru echipe', Discount: '-15%', Fundal: 'Gradient indigo' } },
+    { id: 'cart', isActive: false, label: 'Coș', hint: 'Sumar produse selectate', settings: { Stil: 'Drawer dreapta', 'Total demo gadgeturi': '12,497 RON', 'CTA coș': 'Continuă' } },
+    { id: 'checkout', isActive: false, label: 'Checkout', hint: 'Pași finalizare comandă', settings: { Pași: 'Date, Livrare, Plată', 'Metodă plată': 'Card', 'Text final': 'Finalizează comanda' } }
 ];
 
 const landingBlocks: BuilderBlock<LandingBlockId>[] = [
-    { id: 'hero', label: 'Hero', hint: 'Headline și CTA principal', settings: { Headline: 'Vinde gadgeturi mai rapid', CTA: 'Programează demo', Imagine: 'Catalog gadgeturi' } },
-    { id: 'benefits', label: 'Beneficii', hint: 'Carduri valori cheie', settings: { 'Număr carduri': '3', Layout: 'Grid', Iconuri: 'Lucide minimal' } },
-    { id: 'testimonials', label: 'Testimoniale', hint: 'Dovezi sociale', settings: { Format: 'Carousel static', 'Număr citate': '2', Ton: 'B2B' } },
-    { id: 'lead-form', label: 'Formular lead generation', hint: 'Captură lead', settings: { Câmpuri: 'Nume, Email, Companie', 'Text formular': 'Primește audit gratuit', GDPR: 'Activ' } },
-    { id: 'pricing', label: 'Pricing / Ofertă', hint: 'Plan recomandat', settings: { Preț: 'De la 499 RON/lună', Badge: 'Popular', CTA: 'Alege planul' } },
-    { id: 'faq', label: 'FAQ', hint: 'Întrebări frecvente', settings: { 'Număr întrebări': '4', Layout: 'Accordion demo', Ton: 'Clar' } },
-    { id: 'final-cta', label: 'CTA final', hint: 'Închidere conversie', settings: { Headline: 'Gata să începi?', CTA: 'Discută cu un consultant', Fundal: 'Indigo' } },
-    { id: 'footer', label: 'Footer', hint: 'Link-uri și legal', settings: { Coloane: '3', 'Link legal': 'Termeni', Social: 'LinkedIn' } }
+    { id: 'hero', isActive: true, label: 'Hero', hint: 'Headline și CTA principal', settings: { Headline: 'Vinde gadgeturi mai rapid', CTA: 'Programează demo', Imagine: 'Catalog gadgeturi' } },
+    { id: 'benefits', isActive: true, label: 'Beneficii', hint: 'Carduri valori cheie', settings: { 'Număr carduri': '3', Layout: 'Grid', Iconuri: 'Lucide minimal' } },
+    { id: 'testimonials', isActive: false, label: 'Testimoniale', hint: 'Dovezi sociale', settings: { Format: 'Carousel static', 'Număr citate': '2', Ton: 'B2B' } },
+    { id: 'lead-form', isActive: false, label: 'Formular lead generation', hint: 'Captură lead', settings: { Câmpuri: 'Nume, Email, Companie', 'Text formular': 'Primește audit gratuit', GDPR: 'Activ' } },
+    { id: 'pricing', isActive: false, label: 'Pricing / Ofertă', hint: 'Plan recomandat', settings: { Preț: 'De la 499 RON/lună', Badge: 'Popular', CTA: 'Alege planul' } },
+    { id: 'faq', isActive: false, label: 'FAQ', hint: 'Întrebări frecvente', settings: { 'Număr întrebări': '4', Layout: 'Accordion demo', Ton: 'Clar' } },
+    { id: 'final-cta', isActive: true, label: 'CTA final', hint: 'Închidere conversie', settings: { Headline: 'Gata să începi?', CTA: 'Discută cu un consultant', Fundal: 'Indigo' } },
+    { id: 'footer', isActive: false, label: 'Footer', hint: 'Link-uri și legal', settings: { Coloane: '3', 'Link legal': 'Termeni', Social: 'LinkedIn' } }
 ];
+
+
+const defaultEcommerceTheme: BuilderTheme = {
+    title: 'Gadgeturi premium pentru echipe moderne.',
+    subtitle: 'Magazin demo cu carduri de produs, filtre, coș și checkout vizual.',
+    accentColor: '#34d399',
+    textColor: '#ffffff',
+    backgroundColor: '#020617'
+};
+
+const defaultLandingTheme: BuilderTheme = {
+    title: 'Transformă catalogul GadgetHub în comenzi online în câteva minute.',
+    subtitle: 'Hero, beneficii și call-to-action într-o pagină completă generată cu date demo despre gadgeturi.',
+    accentColor: '#ffffff',
+    textColor: '#ffffff',
+    backgroundColor: '#312e81'
+};
+
+const builderThemeKeys = {
+    ecommerce: 'workflows-ai:ecommerce-builder-theme',
+    landing: 'workflows-ai:landing-builder-theme'
+} as const;
+
+const openThemeDb = () => new Promise<IDBDatabase | null>((resolve) => {
+    if (!('indexedDB' in window)) {
+        resolve(null);
+        return;
+    }
+    const request = indexedDB.open('workflows-ai-builder', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('settings');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+});
+
+const loadThemeFromDb = async (key: string) => {
+    const db = await openThemeDb();
+    if (!db) return null;
+    return new Promise<BuilderTheme | null>((resolve) => {
+        const request = db.transaction('settings', 'readonly').objectStore('settings').get(key);
+        request.onsuccess = () => resolve((request.result as BuilderTheme | undefined) ?? null);
+        request.onerror = () => resolve(null);
+    });
+};
+
+const saveThemeToDb = async (key: string, theme: BuilderTheme) => {
+    const db = await openThemeDb();
+    if (!db) return;
+    await new Promise<void>((resolve) => {
+        const request = db.transaction('settings', 'readwrite').objectStore('settings').put(theme, key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+    });
+};
+
+const useBuilderTheme = (key: string, fallback: BuilderTheme) => {
+    const [theme, setTheme] = useState<BuilderTheme>(fallback);
+    const [saveStatus, setSaveStatus] = useState('Nesalvat');
+
+    useEffect(() => {
+        let isMounted = true;
+        loadThemeFromDb(key).then((savedTheme) => {
+            if (isMounted && savedTheme) setTheme(savedTheme);
+        });
+        return () => { isMounted = false; };
+    }, [key]);
+
+    const saveTheme = async () => {
+        await saveThemeToDb(key, theme);
+        setSaveStatus('Salvat în IndexedDB');
+        window.setTimeout(() => setSaveStatus('Nesalvat'), 1800);
+    };
+
+    return { theme, setTheme, saveTheme, saveStatus };
+};
 
 const openHtmlPreview = (title: string, body: string) => {
     const previewWindow = window.open('', '_blank');
@@ -226,12 +310,12 @@ const openHtmlPreview = (title: string, body: string) => {
     previewWindow.document.close();
 };
 
-const openEcommerceStorePreview = () => {
-    openHtmlPreview('Preview magazin eCommerce', `<main class="min-h-screen bg-slate-950 text-white"><nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6"><strong class="text-2xl">GadgetHub Store</strong><div class="hidden gap-6 text-sm text-slate-300 md:flex"><span>Produse</span><span>Oferte</span><span>Suport</span></div><button class="rounded-full bg-white px-5 py-2 font-bold text-slate-950">Coș (3)</button></nav><section class="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-2"><div><p class="mb-4 inline-flex rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">Livrare gratuită peste 500 RON</p><h1 class="text-5xl font-black leading-tight md:text-7xl">Gadgeturi premium pentru echipe moderne.</h1><p class="mt-6 text-lg text-slate-300">Magazin demo cu carduri de produs, filtre, coș și checkout vizual.</p><button class="mt-8 rounded-2xl bg-emerald-400 px-7 py-4 font-black text-slate-950">Cumpără acum</button></div><div class="rounded-[2rem] bg-gradient-to-br from-indigo-500 to-emerald-400 p-8 shadow-2xl"><div class="rounded-3xl bg-white/15 p-6 backdrop-blur"><p class="text-sm text-white/80">Produs recomandat</p><h2 class="mt-3 text-3xl font-black">Smartwatch Pro X</h2><p class="mt-16 text-5xl font-black">8.999 RON</p></div></div></section><section class="mx-auto grid max-w-6xl gap-5 px-6 pb-20 md:grid-cols-3">${['Laptop Carbon X','Monitor UltraWide','Docking Station AI'].map((p,i)=>`<article class="rounded-3xl bg-white p-5 text-slate-950 shadow-xl"><div class="mb-5 h-44 rounded-2xl bg-gradient-to-br ${i===0?'from-blue-100 to-indigo-200':i===1?'from-emerald-100 to-cyan-200':'from-amber-100 to-pink-200'}"></div><h3 class="text-xl font-black">${p}</h3><p class="mt-2 text-sm text-slate-500">Stoc disponibil • rating 4.9</p><div class="mt-5 flex items-center justify-between"><strong>${(i+2)*1499} RON</strong><button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white">Adaugă</button></div></article>`).join('')}</section></main>`);
+const openEcommerceStorePreview = (theme = defaultEcommerceTheme) => {
+    openHtmlPreview('Preview magazin eCommerce', `<main style="background:${theme.backgroundColor};color:${theme.textColor}" class="min-h-screen"><nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-6"><strong class="text-2xl">GadgetHub Store</strong><div class="hidden gap-6 text-sm text-slate-300 md:flex"><span>Produse</span><span>Oferte</span><span>Suport</span></div><button class="rounded-full bg-white px-5 py-2 font-bold text-slate-950">Coș (3)</button></nav><section class="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-2"><div><p class="mb-4 inline-flex rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-300">Livrare gratuită peste 500 RON</p><h1 class="text-5xl font-black leading-tight md:text-7xl">${theme.title}</h1><p class="mt-6 text-lg text-slate-300">${theme.subtitle}</p><button style="background:${theme.accentColor}" class="mt-8 rounded-2xl px-7 py-4 font-black text-slate-950">Cumpără acum</button></div><div class="rounded-[2rem] bg-gradient-to-br from-indigo-500 to-emerald-400 p-8 shadow-2xl"><div class="rounded-3xl bg-white/15 p-6 backdrop-blur"><p class="text-sm text-white/80">Produs recomandat</p><h2 class="mt-3 text-3xl font-black">Smartwatch Pro X</h2><p class="mt-16 text-5xl font-black">8.999 RON</p></div></div></section><section class="mx-auto grid max-w-6xl gap-5 px-6 pb-20 md:grid-cols-3">${['Laptop Carbon X','Monitor UltraWide','Docking Station AI'].map((p,i)=>`<article class="rounded-3xl bg-white p-5 text-slate-950 shadow-xl"><div class="mb-5 h-44 rounded-2xl bg-gradient-to-br ${i===0?'from-blue-100 to-indigo-200':i===1?'from-emerald-100 to-cyan-200':'from-amber-100 to-pink-200'}"></div><h3 class="text-xl font-black">${p}</h3><p class="mt-2 text-sm text-slate-500">Stoc disponibil • rating 4.9</p><div class="mt-5 flex items-center justify-between"><strong>${(i+2)*1499} RON</strong><button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white">Adaugă</button></div></article>`).join('')}</section></main>`);
 };
 
-const openLandingFullPreview = () => {
-    openHtmlPreview('Preview landing page', `<main class="min-h-screen bg-white"><section class="bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-950 px-6 py-24 text-white"><div class="mx-auto max-w-5xl text-center"><span class="rounded-full bg-white/10 px-4 py-2 text-sm font-bold">Landing page demo full-screen</span><h1 class="mt-8 text-5xl font-black leading-tight md:text-7xl">Transformă catalogul GadgetHub în comenzi online în câteva minute.</h1><p class="mx-auto mt-6 max-w-2xl text-xl text-indigo-100">Hero, beneficii, testimoniale și call-to-action într-o pagină completă generată cu date demo despre gadgeturi.</p><button class="mt-10 rounded-2xl bg-white px-8 py-4 font-black text-indigo-950">Programează demo</button></div></section><section class="mx-auto grid max-w-6xl gap-6 px-6 py-20 md:grid-cols-3">${['Analiză instant','Rapoarte AI','Integrări rapide'].map(t=>`<div class="rounded-3xl border border-slate-200 p-8 shadow-sm"><h2 class="text-2xl font-black text-slate-900">${t}</h2><p class="mt-3 text-slate-500">Conținut demo bazat pe datele GadgetHub.ro.</p></div>`).join('')}</section><section class="bg-slate-50 px-6 py-20 text-center"><h2 class="text-4xl font-black text-slate-900">Gata să începi?</h2><p class="mt-3 text-slate-500">Acesta este preview-ul într-o pagină separată.</p></section></main>`);
+const openLandingFullPreview = (theme = defaultLandingTheme) => {
+    openHtmlPreview('Preview landing page', `<main class="min-h-screen bg-white"><section style="background:${theme.backgroundColor};color:${theme.textColor}" class="px-6 py-24"><div class="mx-auto max-w-5xl text-center"><span class="rounded-full bg-white/10 px-4 py-2 text-sm font-bold">Landing page demo full-screen</span><h1 class="mt-8 text-5xl font-black leading-tight md:text-7xl">${theme.title}</h1><p class="mx-auto mt-6 max-w-2xl text-xl opacity-80">${theme.subtitle}</p><button style="background:${theme.accentColor}" class="mt-10 rounded-2xl px-8 py-4 font-black text-indigo-950">Programează demo</button></div></section><section class="mx-auto grid max-w-6xl gap-6 px-6 py-20 md:grid-cols-3">${['Analiză instant','Rapoarte AI','Integrări rapide'].map(t=>`<div class="rounded-3xl border border-slate-200 p-8 shadow-sm"><h2 class="text-2xl font-black text-slate-900">${t}</h2><p class="mt-3 text-slate-500">Conținut demo bazat pe datele GadgetHub.ro.</p></div>`).join('')}</section><section class="bg-slate-50 px-6 py-20 text-center"><h2 class="text-4xl font-black text-slate-900">Gata să începi?</h2><p class="mt-3 text-slate-500">Acesta este preview-ul într-o pagină separată.</p></section></main>`);
 };
 
 const createId = (prefix: string) =>
@@ -558,36 +642,47 @@ function ExpenseForm({ expenses, draft, editingId, onDraftChange, onSubmit, onEd
 
 function EcommerceBuilderPreview() {
     const [selectedEcommerceBlock, setSelectedEcommerceBlock] = useState<EcommerceBlockId>('hero');
-    return <BuilderShell title="GadgetHub Store" eyebrow="eCommerce Builder" onPreview={openEcommerceStorePreview} sidebar={<BuilderSidebar<EcommerceBlockId> blocks={ecommerceBlocks} selectedId={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} />} canvas={<BuilderCanvas><EcommerceCanvas selectedBlock={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={ecommerceBlocks.find((block) => block.id === selectedEcommerceBlock) ?? ecommerceBlocks[0]} />} />;
+    const { theme, setTheme, saveTheme, saveStatus } = useBuilderTheme(builderThemeKeys.ecommerce, defaultEcommerceTheme);
+    const selectedBlock = ecommerceBlocks.find((block) => block.id === selectedEcommerceBlock) ?? ecommerceBlocks[0];
+
+    return <BuilderShell title="GadgetHub Store" eyebrow="eCommerce Builder" onPreview={() => openEcommerceStorePreview(theme)} onSave={saveTheme} saveStatus={saveStatus} sidebar={<BuilderSidebar<EcommerceBlockId> blocks={ecommerceBlocks} selectedId={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} />} canvas={<BuilderCanvas><EcommerceCanvas selectedBlock={selectedEcommerceBlock} onSelect={setSelectedEcommerceBlock} theme={theme} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={selectedBlock} theme={theme} onThemeChange={setTheme} />} />;
 }
 
 function LandingBuilderPreview() {
     const [selectedLandingBlock, setSelectedLandingBlock] = useState<LandingBlockId>('hero');
-    return <BuilderShell title="AI Operations Landing" eyebrow="Landing Page Builder" onPreview={openLandingFullPreview} sidebar={<BuilderSidebar<LandingBlockId> blocks={landingBlocks} selectedId={selectedLandingBlock} onSelect={setSelectedLandingBlock} />} canvas={<BuilderCanvas><LandingCanvas selectedBlock={selectedLandingBlock} onSelect={setSelectedLandingBlock} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={landingBlocks.find((block) => block.id === selectedLandingBlock) ?? landingBlocks[0]} />} />;
+    const { theme, setTheme, saveTheme, saveStatus } = useBuilderTheme(builderThemeKeys.landing, defaultLandingTheme);
+    const selectedBlock = landingBlocks.find((block) => block.id === selectedLandingBlock) ?? landingBlocks[0];
+
+    return <BuilderShell title="AI Operations Landing" eyebrow="Landing Page Builder" onPreview={() => openLandingFullPreview(theme)} onSave={saveTheme} saveStatus={saveStatus} sidebar={<BuilderSidebar<LandingBlockId> blocks={landingBlocks} selectedId={selectedLandingBlock} onSelect={setSelectedLandingBlock} />} canvas={<BuilderCanvas><LandingCanvas selectedBlock={selectedLandingBlock} onSelect={setSelectedLandingBlock} theme={theme} /></BuilderCanvas>} properties={<BuilderPropertiesPanel block={selectedBlock} theme={theme} onThemeChange={setTheme} />} />;
 }
 
-function BuilderShell({ title, eyebrow, sidebar, canvas, properties, onPreview }: { title: string; eyebrow: string; sidebar: ReactNode; canvas: ReactNode; properties: ReactNode; onPreview: () => void }) {
-    return <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50"><div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">{eyebrow}</p><h3 className="text-xl font-black text-slate-900">{title}</h3></div><div className="flex gap-2"><button className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"><Save className="h-4 w-4" /> Save</button><button onClick={onPreview} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"><ExternalLink className="h-4 w-4" /> Preview</button></div></div><div className="grid min-h-[620px] gap-0 lg:grid-cols-[240px_1fr_280px]">{sidebar}{canvas}{properties}</div></div>;
+function BuilderShell({ title, eyebrow, sidebar, canvas, properties, onPreview, onSave, saveStatus }: { title: string; eyebrow: string; sidebar: ReactNode; canvas: ReactNode; properties: ReactNode; onPreview: () => void; onSave: () => void; saveStatus: string }) {
+    return <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50"><div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">{eyebrow}</p><h3 className="text-xl font-black text-slate-900">{title}</h3><p className="mt-1 text-xs font-semibold text-slate-400">{saveStatus}</p></div><div className="flex gap-2"><button onClick={onSave} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white"><Save className="h-4 w-4" /> Save</button><button onClick={onPreview} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"><ExternalLink className="h-4 w-4" /> Preview</button></div></div><div className="grid min-h-[620px] gap-0 lg:grid-cols-[240px_1fr_280px]">{sidebar}{canvas}{properties}</div></div>;
 }
 
 function BuilderSidebar<T extends string>({ blocks, selectedId, onSelect }: { blocks: BuilderBlock<T>[]; selectedId: T; onSelect: (id: T) => void }) {
-    return <aside className="border-b border-slate-200 bg-white p-4 lg:border-b-0 lg:border-r"><h4 className="mb-3 text-sm font-black text-slate-900">Secțiuni / componente</h4><div className="space-y-2">{blocks.map((block) => <button key={block.id} onClick={() => onSelect(block.id)} className={`w-full rounded-2xl border p-3 text-left transition ${selectedId === block.id ? 'border-indigo-200 bg-indigo-50 text-indigo-900' : 'border-slate-100 bg-white text-slate-700 hover:bg-slate-50'}`}><span className="block text-sm font-black">{block.label}</span><span className="text-xs text-slate-500">{block.hint}</span></button>)}</div></aside>;
+    return <aside className="border-b border-slate-200 bg-white p-4 lg:border-b-0 lg:border-r"><h4 className="mb-3 text-sm font-black text-slate-900">Secțiuni / componente</h4><div className="space-y-2">{blocks.map((block) => {
+        const isLocked = block.isActive === false;
+        return <button key={block.id} type="button" disabled={isLocked} onClick={() => onSelect(block.id)} className={`w-full rounded-2xl border p-3 text-left transition ${isLocked ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400 opacity-75' : selectedId === block.id ? 'border-indigo-200 bg-indigo-50 text-indigo-900' : 'border-slate-100 bg-white text-slate-700 hover:bg-slate-50'}`}><span className="flex items-center justify-between gap-2 text-sm font-black"><span>{block.label}</span>{isLocked && <Lock className="h-3.5 w-3.5" />}</span><span className="text-xs text-slate-500">{isLocked ? 'Blocat momentan — nu apare în preview.' : block.hint}</span></button>;
+    })}</div></aside>;
 }
 
 function BuilderCanvas({ children }: { children: ReactNode }) {
     return <main className="bg-slate-100 p-4"><div className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">{children}</div></main>;
 }
 
-function BuilderPropertiesPanel<T extends string>({ block }: { block: BuilderBlock<T> }) {
-    return <aside className="border-t border-slate-200 bg-white p-4 lg:border-l lg:border-t-0"><h4 className="text-sm font-black text-slate-900">Proprietăți</h4><p className="mt-1 text-xs text-slate-500">Setări demo GadgetHub pentru: {block.label}</p><div className="mt-4 space-y-3">{Object.entries(block.settings).map(([key, value]) => <label key={key} className="block"><span className="text-xs font-bold text-slate-500">{key}</span><input readOnly value={value} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700" /></label>)}</div></aside>;
+function BuilderPropertiesPanel<T extends string>({ block, theme, onThemeChange }: { block: BuilderBlock<T>; theme: BuilderTheme; onThemeChange: (theme: BuilderTheme) => void }) {
+    const isLocked = block.isActive === false;
+
+    return <aside className="border-t border-slate-200 bg-white p-4 lg:border-l lg:border-t-0"><h4 className="text-sm font-black text-slate-900">Proprietăți</h4><p className="mt-1 text-xs text-slate-500">Setări demo GadgetHub pentru: {block.label}</p>{isLocked && <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">Componentă blocată: nu este prezentă în preview-ul deschis în fereastră separată.</div>}<div className="mt-4 space-y-3 opacity-100">{Object.entries(block.settings).map(([key, value]) => <label key={key} className="block"><span className="text-xs font-bold text-slate-500">{key}</span><input readOnly value={value} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700" /></label>)}</div><div className="mt-6 border-t border-slate-100 pt-4"><h5 className="text-xs font-black uppercase tracking-wide text-slate-500">Text & culori live</h5><label className="mt-3 block"><span className="text-xs font-bold text-slate-500">Titlu</span><textarea value={theme.title} onChange={(event) => onThemeChange({ ...theme, title: event.target.value })} className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-300" /></label><label className="mt-3 block"><span className="text-xs font-bold text-slate-500">Descriere</span><textarea value={theme.subtitle} onChange={(event) => onThemeChange({ ...theme, subtitle: event.target.value })} className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-300" /></label><div className="mt-3 grid grid-cols-3 gap-2">{([['accentColor', 'Accent'], ['textColor', 'Text'], ['backgroundColor', 'Fundal']] as const).map(([key, label]) => <label key={key} className="text-xs font-bold text-slate-500">{label}<input type="color" value={theme[key]} onChange={(event) => onThemeChange({ ...theme, [key]: event.target.value })} className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white p-1" /></label>)}</div></div></aside>;
 }
 
-function EcommerceCanvas({ selectedBlock, onSelect }: { selectedBlock: EcommerceBlockId; onSelect: (block: EcommerceBlockId) => void }) {
-    return <div className="space-y-3 text-slate-900"><CanvasSection id="header" selectedId={selectedBlock} onSelect={onSelect}><div className="flex items-center justify-between"><strong>GadgetHub</strong><div className="flex gap-3 text-xs text-slate-500"><span>Produse</span><span>Oferte</span><span>Suport</span></div><ShoppingCart className="h-4 w-4" /></div></CanvasSection><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl bg-slate-950 p-6 text-white"><p className="text-xs font-bold text-emerald-300">Livrare gratuită peste 500 RON</p><h1 className="mt-2 text-3xl font-black">Gadgeturi premium pentru echipe moderne.</h1><button className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950">Cumpără acum</button></div></CanvasSection><CanvasSection id="categories" selectedId={selectedBlock} onSelect={onSelect}><div className="grid grid-cols-3 gap-2">{['Laptopuri', 'Monitoare', 'Accesorii'].map((category) => <div key={category} className="rounded-xl bg-slate-100 p-3 text-center text-xs font-bold">{category}</div>)}</div></CanvasSection><CanvasSection id="products" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-3 md:grid-cols-3">{['Laptop Carbon X', 'Monitor UltraWide', 'Docking AI'].map((product, index) => <div key={product} className="rounded-2xl border border-slate-100 p-3"><div className={`h-20 rounded-xl ${index === 0 ? 'bg-blue-100' : index === 1 ? 'bg-emerald-100' : 'bg-amber-100'}`} /><p className="mt-2 text-sm font-black">{product}</p><p className="text-xs text-slate-500">{(index + 2) * 1499} RON</p></div>)}</div></CanvasSection><CanvasSection id="banner" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl bg-indigo-50 p-4 text-sm font-bold text-indigo-800">Banner ofertă: -15% pentru setup complet.</div></CanvasSection><div className="grid gap-3 md:grid-cols-2"><CanvasSection id="cart" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-slate-50 p-3 text-sm"><strong>Coș</strong><p className="text-slate-500">3 produse • 12,497 RON</p></div></CanvasSection><CanvasSection id="checkout" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-slate-50 p-3 text-sm"><strong>Checkout</strong><p className="text-slate-500">Date → Livrare → Plată</p></div></CanvasSection></div></div>;
+function EcommerceCanvas({ selectedBlock, onSelect, theme }: { selectedBlock: EcommerceBlockId; onSelect: (block: EcommerceBlockId) => void; theme: BuilderTheme }) {
+    return <div className="space-y-3 text-slate-900"><CanvasSection id="header" selectedId={selectedBlock} onSelect={onSelect}><div className="flex items-center justify-between"><strong>GadgetHub</strong><div className="flex gap-3 text-xs text-slate-500"><span>Produse</span><span>Oferte</span><span>Suport</span></div><ShoppingCart className="h-4 w-4" /></div></CanvasSection><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl p-6" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}><p className="text-xs font-bold opacity-80">Livrare gratuită peste 500 RON</p><h1 className="mt-2 text-3xl font-black">{theme.title}</h1><p className="mt-2 text-sm opacity-75">{theme.subtitle}</p><button className="mt-4 rounded-xl px-4 py-2 text-sm font-black text-slate-950" style={{ backgroundColor: theme.accentColor }}>Cumpără acum</button></div></CanvasSection><CanvasSection id="products" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-3 md:grid-cols-3">{['Laptop Carbon X', 'Monitor UltraWide', 'Docking AI'].map((product, index) => <div key={product} className="rounded-2xl border border-slate-100 p-3"><div className={`h-20 rounded-xl ${index === 0 ? 'bg-blue-100' : index === 1 ? 'bg-emerald-100' : 'bg-amber-100'}`} /><p className="mt-2 text-sm font-black">{product}</p><p className="text-xs text-slate-500">{(index + 2) * 1499} RON</p></div>)}</div></CanvasSection></div>;
 }
 
-function LandingCanvas({ selectedBlock, onSelect }: { selectedBlock: LandingBlockId; onSelect: (block: LandingBlockId) => void }) {
-    return <div className="space-y-3 text-slate-900"><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl bg-gradient-to-br from-indigo-950 to-purple-900 p-8 text-center text-white"><p className="text-xs font-bold text-indigo-200">AI Generated</p><h1 className="mt-2 text-3xl font-black">Transformă gadgeturile în comenzi online.</h1><button className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-black text-indigo-950">Programează demo</button></div></CanvasSection><CanvasSection id="benefits" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-2 md:grid-cols-3">{['Analiză instant', 'Rapoarte AI', 'Integrări rapide'].map((item) => <div key={item} className="rounded-xl border border-slate-100 p-3 text-sm font-bold">{item}</div>)}</div></CanvasSection><CanvasSection id="testimonials" selectedId={selectedBlock} onSelect={onSelect}><p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">„Am redus timpul de raportare cu 60%.” — GadgetHub.ro</p></CanvasSection><CanvasSection id="lead-form" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-2 rounded-xl border border-slate-100 p-4 md:grid-cols-3"><input readOnly value="Nume" className="rounded-lg bg-slate-50 px-3 py-2 text-sm" /><input readOnly value="Email" className="rounded-lg bg-slate-50 px-3 py-2 text-sm" /><button className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-bold text-white">Trimite</button></div></CanvasSection><CanvasSection id="pricing" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-indigo-50 p-4"><strong>Plan Growth</strong><p className="text-sm text-slate-600">De la 499 RON/lună</p></div></CanvasSection><CanvasSection id="faq" selectedId={selectedBlock} onSelect={onSelect}><div className="space-y-2">{['Cât durează implementarea?', 'Există suport?'].map((item) => <p key={item} className="rounded-lg bg-slate-50 p-3 text-sm font-semibold">{item}</p>)}</div></CanvasSection><CanvasSection id="final-cta" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-slate-950 p-5 text-center text-white"><strong>Gata să începi?</strong><p className="text-sm text-slate-300">Discută cu echipa GadgetHub despre oferta de gadgeturi.</p></div></CanvasSection><CanvasSection id="footer" selectedId={selectedBlock} onSelect={onSelect}><div className="flex justify-between text-xs text-slate-500"><span>© GadgetHub.ro</span><span>Termeni • Privacy • LinkedIn</span></div></CanvasSection></div>;
+function LandingCanvas({ selectedBlock, onSelect, theme }: { selectedBlock: LandingBlockId; onSelect: (block: LandingBlockId) => void; theme: BuilderTheme }) {
+    return <div className="space-y-3 text-slate-900"><CanvasSection id="hero" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-2xl p-8 text-center" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}><p className="text-xs font-bold opacity-80">AI Generated</p><h1 className="mt-2 text-3xl font-black">{theme.title}</h1><p className="mt-2 text-sm opacity-75">{theme.subtitle}</p><button className="mt-4 rounded-xl px-4 py-2 text-sm font-black text-indigo-950" style={{ backgroundColor: theme.accentColor }}>Programează demo</button></div></CanvasSection><CanvasSection id="benefits" selectedId={selectedBlock} onSelect={onSelect}><div className="grid gap-2 md:grid-cols-3">{['Analiză instant', 'Rapoarte AI', 'Integrări rapide'].map((item) => <div key={item} className="rounded-xl border border-slate-100 p-3 text-sm font-bold">{item}</div>)}</div></CanvasSection><CanvasSection id="final-cta" selectedId={selectedBlock} onSelect={onSelect}><div className="rounded-xl bg-slate-950 p-5 text-center text-white"><strong>Gata să începi?</strong><p className="text-sm text-slate-300">Discută cu echipa GadgetHub despre oferta de gadgeturi.</p></div></CanvasSection></div>;
 }
 
 function CanvasSection<T extends string>({ id, selectedId, onSelect, children }: { id: T; selectedId: T; onSelect: (id: T) => void; children: ReactNode }) {

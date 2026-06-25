@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Lock, Sparkles, Trash2 } from 'lucide-react';
+import { FilePlus2, Sparkles, Trash2 } from 'lucide-react';
 import type { UploadedFile } from '../types';
 import { getFileIcon } from '../fileIcons';
 
@@ -40,9 +40,14 @@ export function ReviewStep({ files, onRemoveFile, onProcessData }: Props) {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-100">
-                    <button disabled type="button" className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-100 py-4 font-bold text-slate-400">
-                        <Lock className="h-5 w-5" />
-                        <span>Fișiere suplimentare indisponibile</span>
+                    <button disabled type="button" className="group flex flex-1 cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white/70 px-5 py-4 text-left shadow-sm shadow-slate-100">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                            <FilePlus2 className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-sm font-black leading-tight text-slate-500">Adăugare fișiere</span>
+                            <span className="block text-xs font-semibold text-slate-400">disponibilă după autentificare</span>
+                        </span>
                     </button>
                     <button type="button" onClick={onProcessData} className="flex-[2] py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/30 hover:scale-[1.02] transition-all">
                         <Sparkles className="w-6 h-6" />
