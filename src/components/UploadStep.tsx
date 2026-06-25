@@ -21,7 +21,7 @@ export function UploadStep({ isDragging, onDragOver, onDragLeave, onDrop, onChoo
                     </span>
                 </h1>
                 <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                    Încarcă poze, facturi, tabele Excel, Word sau PDF-uri. AI-ul îți înțelege datele și le transformă în module utile pentru firmă: CRM, ERP, magazin online sau landing page.
+                    Încarcă poze, facturi, tabele Excel, Word sau PDF-uri. AI-ul îți înțelege datele și le transformă în module de business: CRM, ERP, magazin online sau landing page.
                 </p>
             </div>
 
