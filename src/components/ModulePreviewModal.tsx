@@ -1,15 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import {
-    Activity,
     ArrowUpRight,
     BarChart3,
     Calendar,
     CreditCard,
-    DollarSign,
     Edit3,
     ExternalLink,
     Eye,
     FileText,
+    Layout,
     MousePointerClick,
     Package,
     Plus,
@@ -28,13 +27,6 @@ type Props = {
     onClose: () => void;
 };
 
-const ecommerceOrders = [
-    { id: '#1089', customer: 'Andrei Stan', product: 'Pachet Consultanță', amount: '4,500 RON', status: 'Livrat' },
-    { id: '#1090', customer: 'Ioana Popa', product: 'Abonament Premium', amount: '1,200 RON', status: 'Procesare' },
-    { id: '#1091', customer: 'SC Alfa SRL', product: 'Analiză Date', amount: '7,800 RON', status: 'Finalizat' },
-    { id: '#1092', customer: 'Mihai Radu', product: 'Workshop AI', amount: '2,999 RON', status: 'Anulat' }
-];
-
 const erpInvoices = [
     { id: 'FCT-2024-001', client: 'Brightech Inc.', value: '12,000 RON', dueDate: '12 Iun 2026', status: 'Plătită' },
     { id: 'FCT-2024-002', client: 'WebDesign Pro', value: '5,500 RON', dueDate: '18 Iun 2026', status: 'În așteptare' },
@@ -42,15 +34,8 @@ const erpInvoices = [
     { id: 'FCT-2024-004', client: 'CloudNet', value: '8,400 RON', dueDate: '01 Iul 2026', status: 'Plătită' }
 ];
 
-const landingMetrics = [
-    { label: 'Vizitatori', value: '12,450', icon: <Users className="w-5 h-5" />, change: '+24%' },
-    { label: 'Conversii', value: '3,2%', icon: <MousePointerClick className="w-5 h-5" />, change: '+1.1%' },
-    { label: 'Rata de respingere', value: '42%', icon: <Activity className="w-5 h-5" />, change: '-8%' },
-    { label: 'Timp pe pagină', value: '4m 12s', icon: <Activity className="w-5 h-5" />, change: '+30s' }
-];
-
 const openHtmlPreview = (title: string, body: string) => {
-    const previewWindow = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=900');
+    const previewWindow = window.open('', '_blank');
     if (!previewWindow) return;
 
     previewWindow.document.write(`<!doctype html><html lang="ro"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>${title}</title><script src="https://cdn.tailwindcss.com"></script></head><body>${body}</body></html>`);
@@ -73,6 +58,11 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
     ]);
     const [editingCrmIndex, setEditingCrmIndex] = useState<number | null>(null);
     const [crmDraft, setCrmDraft] = useState({ type: 'Lead', name: '', contact: '', value: '', status: 'Nou' });
+    const [invoices, setInvoices] = useState(erpInvoices);
+
+    const updateInvoiceStatus = (invoiceId: string, status: string) => {
+        setInvoices((prev) => prev.map((invoice) => invoice.id === invoiceId ? { ...invoice, status } : invoice));
+    };
 
     if (!activeModulePreview) return null;
 
@@ -80,7 +70,7 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
 
     return (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={onClose}>
-            <div className="bg-white w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-3xl shadow-2xl border border-slate-200 p-6 md:p-8 animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white w-full max-w-7xl max-h-[92vh] overflow-y-auto rounded-[2rem] shadow-2xl border border-slate-200 p-6 md:p-10 animate-in zoom-in-95 duration-300" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold flex items-center gap-3">
                         {activeModule?.icon}
@@ -123,20 +113,29 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                                 <input value={crmDraft.status} onChange={(e) => setCrmDraft((prev) => ({ ...prev, status: e.target.value }))} placeholder="Status" className="rounded-xl border border-slate-200 px-3 py-3 text-sm" />
                             </div>
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                            <div className="p-4 bg-slate-50 border-b border-slate-100 font-semibold text-slate-700">Registru CRM editabil</div>
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-slate-500"><tr><th className="p-3 pl-4">Tip</th><th className="p-3">Nume</th><th className="p-3">Contact</th><th className="p-3">Valoare</th><th className="p-3">Status</th><th className="p-3 pr-4">Acțiuni</th></tr></thead>
-                                <tbody className="divide-y divide-slate-100">
-                                {crmRecords.map((record, i) => (
-                                    <tr key={`${record.name}-${i}`} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-3 pl-4"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{record.type}</span></td>
-                                        <td className="p-3 font-medium text-slate-800">{record.name}</td><td className="p-3 text-slate-600">{record.contact}</td><td className="p-3 font-semibold text-slate-900">{record.value}</td><td className="p-3 text-slate-600">{record.status}</td>
-                                        <td className="p-3 pr-4"><div className="flex gap-2"><button type="button" onClick={() => { setEditingCrmIndex(i); setCrmDraft(record); }} className="rounded-lg bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => setCrmRecords((prev) => prev.filter((_, idx) => idx !== i))} className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100"><Trash2 className="h-4 w-4" /></button></div></td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
+                        <div className="grid gap-5 xl:grid-cols-3">
+                            {(['Lead', 'Comandă', 'Client'] as const).map((type) => {
+                                const palette = type === 'Lead' ? 'border-blue-100 bg-blue-50/60 text-blue-700' : type === 'Comandă' ? 'border-emerald-100 bg-emerald-50/60 text-emerald-700' : 'border-purple-100 bg-purple-50/60 text-purple-700';
+                                return (
+                                    <section key={type} className={`rounded-3xl border p-5 ${palette}`}>
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <h3 className="text-lg font-black text-slate-900">{type === 'Lead' ? 'Lead-uri' : type === 'Comandă' ? 'Comenzi' : 'Clienți'}</h3>
+                                            <span className="rounded-full bg-white px-3 py-1 text-xs font-black">{crmRecords.filter((record) => record.type === type).length}</span>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {crmRecords.map((record, i) => ({ record, i })).filter(({ record }) => record.type === type).map(({ record, i }) => (
+                                                <article key={`${record.name}-${i}`} className="rounded-2xl bg-white p-4 text-slate-800 shadow-sm">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div><h4 className="font-black text-slate-900">{record.name}</h4><p className="text-sm text-slate-500">{record.contact}</p></div>
+                                                        <div className="flex gap-2"><button type="button" onClick={() => { setEditingCrmIndex(i); setCrmDraft(record); }} className="rounded-lg bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => setCrmRecords((prev) => prev.filter((_, idx) => idx !== i))} className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100"><Trash2 className="h-4 w-4" /></button></div>
+                                                    </div>
+                                                    <div className="mt-4 flex items-center justify-between text-sm"><strong>{record.value}</strong><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{record.status}</span></div>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    </section>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -145,8 +144,8 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                     <div className="space-y-6">
                         <div className="rounded-3xl bg-slate-950 p-5 text-white shadow-xl">
                             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                <div><p className="text-sm font-bold text-emerald-300">Preview magazin online</p><h3 className="text-2xl font-black">NordicTech Store</h3><p className="mt-1 text-sm text-slate-300">Deschide o fereastră separată cu un storefront e-commerce complet.</p></div>
-                                <button type="button" onClick={openEcommerceStorePreview} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 hover:bg-slate-100"><ExternalLink className="h-4 w-4" /> Preview în altă fereastră</button>
+                                <div><p className="text-sm font-bold text-emerald-300">Preview magazin online</p><h3 className="text-2xl font-black">NordicTech Store</h3><p className="mt-1 text-sm text-slate-300">Deschide un tab nou cu un storefront e-commerce complet.</p></div>
+                                <button type="button" onClick={openEcommerceStorePreview} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 hover:bg-slate-100"><ExternalLink className="h-4 w-4" /> Preview în tab nou</button>
                             </div>
                             <div className="mt-5 grid gap-4 md:grid-cols-3">
                                 {['Laptop Carbon X', 'Monitor UltraWide', 'Docking Station AI'].map((product, i) => (
@@ -155,12 +154,12 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                             </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <StoreStat icon={<DollarSign className="text-emerald-500 w-8 h-8 p-1.5 bg-emerald-50 rounded-lg" />} label="Vânzări Azi" value="45.2k RON" />
-                            <StoreStat icon={<Package className="text-blue-500 w-8 h-8 p-1.5 bg-blue-50 rounded-lg" />} label="Comenzi" value="1,204" />
-                            <StoreStat icon={<Eye className="text-purple-500 w-8 h-8 p-1.5 bg-purple-50 rounded-lg" />} label="Vizualizări" value="34.8k" />
-                            <StoreStat icon={<ShoppingCart className="text-amber-500 w-8 h-8 p-1.5 bg-amber-50 rounded-lg" />} label="Rata de abandon" value="68%" />
+                            <StoreStat icon={<Layout className="text-emerald-500 w-8 h-8 p-1.5 bg-emerald-50 rounded-lg" />} label="Template" value="Storefront" />
+                            <StoreStat icon={<Package className="text-blue-500 w-8 h-8 p-1.5 bg-blue-50 rounded-lg" />} label="Produse mock" value="12" />
+                            <StoreStat icon={<Eye className="text-purple-500 w-8 h-8 p-1.5 bg-purple-50 rounded-lg" />} label="Preview" value="Full page" />
+                            <StoreStat icon={<ShoppingCart className="text-amber-500 w-8 h-8 p-1.5 bg-amber-50 rounded-lg" />} label="Checkout UI" value="Activ" />
                         </div>
-                        <OrdersTable />
+                        <BuilderChecklist title="Componente builder e-commerce" items={['Hero promo + CTA', 'Grid produse cu carduri editabile', 'Coș și checkout vizual', 'Bannere oferte și filtre']} />
                     </div>
                 )}
 
@@ -171,7 +170,8 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                             <div className="rounded-3xl border border-amber-100 bg-amber-50/60 p-5"><h3 className="text-xl font-black text-slate-900">Generator factură nouă</h3><p className="mt-1 text-sm text-slate-500">Formular dummy pentru emitere rapidă facturi.</p><div className="mt-4 grid gap-3 md:grid-cols-2"><input defaultValue="FCT-2026-105" className="rounded-xl border border-amber-100 px-3 py-3 text-sm" /><input defaultValue="Client Demo SRL" className="rounded-xl border border-amber-100 px-3 py-3 text-sm" /><input defaultValue="Servicii automatizare AI" className="rounded-xl border border-amber-100 px-3 py-3 text-sm md:col-span-2" /><input defaultValue="9,800 RON" className="rounded-xl border border-amber-100 px-3 py-3 text-sm" /><input defaultValue="30 Iun 2026" className="rounded-xl border border-amber-100 px-3 py-3 text-sm" /></div><button type="button" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white hover:bg-amber-600"><FileText className="h-4 w-4" /> Generează factură</button></div>
                             <div className="rounded-3xl border border-slate-200 bg-white p-5"><h3 className="text-xl font-black text-slate-900">Raport centru de costuri</h3><p className="mt-1 text-sm text-slate-500">Analiză demo pentru departamente.</p>{[['Marketing', 42, 'bg-purple-500'], ['Operațional', 68, 'bg-blue-500'], ['Vânzări', 55, 'bg-emerald-500']].map(([name, value, color]) => (<div key={name} className="mt-4"><div className="mb-1 flex justify-between text-sm font-semibold"><span>{name}</span><span>{value}% buget</span></div><div className="h-3 overflow-hidden rounded-full bg-slate-100"><div className={`${color} h-full rounded-full`} style={{ width: `${value}%` }} /></div></div>))}</div>
                         </div>
-                        <InvoicesTable />
+                        <InvoicesTable invoices={invoices} onStatusChange={updateInvoiceStatus} />
+                        <div className="grid gap-4 lg:grid-cols-2"><InventoryTable /><SupplierExpenses /></div>
                     </div>
                 )}
 
@@ -179,7 +179,7 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                     <div className="space-y-6">
                         <div className="flex flex-col gap-3 rounded-3xl border border-purple-100 bg-purple-50 p-5 md:flex-row md:items-center md:justify-between"><div><h3 className="text-xl font-black text-slate-900">Preview landing page full</h3><p className="text-sm text-slate-500">Deschide landing page-ul într-o pagină separată, fără rama dashboard-ului.</p></div><button type="button" onClick={openLandingFullPreview} className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white hover:bg-purple-700"><ExternalLink className="h-4 w-4" /> Preview full page</button></div>
                         <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-3xl border border-purple-100 shadow-inner"><div className="flex items-center gap-3 mb-4"><div className="w-3 h-3 bg-purple-500 rounded-full"></div><div className="w-3 h-3 bg-indigo-300 rounded-full"></div><div className="w-3 h-3 bg-purple-200 rounded-full"></div><span className="text-xs text-slate-400 ml-2">https://firma-ta.ro</span></div><div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-slate-100"><span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">✨ AI Generated</span><h1 className="text-3xl md:text-5xl font-bold text-slate-900 mt-4 leading-tight">Transformă-ți afacerea cu <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Inteligență Artificială</span></h1><p className="text-slate-500 mt-4 max-w-2xl text-lg">O platformă all-in-one care automatizează procesele, analizează datele și crește eficiența echipei tale.</p><div className="flex gap-3 mt-8"><button className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors shadow-lg">Începe Acum</button><button className="bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors">Află Mai Multe</button></div></div></div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{landingMetrics.map((metric, i) => (<div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"><div className="flex items-center gap-2 text-slate-500 mb-2">{metric.icon}</div><p className="text-2xl font-bold text-slate-900">{metric.value}</p><p className="text-sm text-slate-500">{metric.label}</p><span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 mt-1"><ArrowUpRight className="w-3 h-3" /> {metric.change}</span></div>))}</div>
+                        <BuilderChecklist title="Componente builder landing" items={['Hero section cu headline și CTA', 'Secțiuni beneficii și testimoniale', 'Formular lead generation', 'Footer și bloc final de conversie']} />
                     </div>
                 )}
             </div>
@@ -196,14 +196,24 @@ function StoreStat({ icon, label, value }: { icon: ReactNode; label: string; val
     return <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm"><div className="flex justify-between items-start">{icon}<span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">+8.2%</span></div><p className="text-2xl font-bold mt-3">{value}</p><p className="text-sm text-slate-500">{label}</p></div>;
 }
 
-function OrdersTable() {
-    return <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden"><div className="p-4 bg-slate-50 border-b border-slate-100 font-semibold text-slate-700">Ultimele Comenzi</div><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-3 pl-4">ID Comandă</th><th className="p-3">Client</th><th className="p-3">Produs</th><th className="p-3">Sumă</th><th className="p-3 pr-4">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{ecommerceOrders.map((order, i) => (<tr key={i} className="hover:bg-slate-50 transition-colors"><td className="p-3 pl-4 font-medium text-indigo-600">{order.id}</td><td className="p-3 text-slate-800">{order.customer}</td><td className="p-3 text-slate-600">{order.product}</td><td className="p-3 font-semibold text-slate-900">{order.amount}</td><td className="p-3 pr-4"><span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Livrat' || order.status === 'Finalizat' ? 'bg-emerald-100 text-emerald-700' : order.status === 'Procesare' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{order.status}</span></td></tr>))}</tbody></table></div>;
+function BuilderChecklist({ title, items }: { title: string; items: string[] }) {
+    return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><h3 className="text-lg font-black text-slate-900">{title}</h3><div className="mt-4 grid gap-3 md:grid-cols-2">{items.map((item) => <div key={item} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700"><MousePointerClick className="h-4 w-4 text-indigo-500" />{item}</div>)}</div></div>;
 }
 
 function ErpKpi({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
     return <div className="bg-white p-5 rounded-2xl border border-slate-200 flex items-center gap-4">{icon}<div><p className="text-sm text-slate-500 font-medium">{label}</p><p className="text-2xl font-bold text-slate-900">{value}</p></div></div>;
 }
 
-function InvoicesTable() {
-    return <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden"><div className="p-4 bg-slate-50 border-b border-slate-100 font-semibold text-slate-700">Facturi Recente</div><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-3 pl-4">Număr</th><th className="p-3">Client</th><th className="p-3">Valoare</th><th className="p-3">Scadentă</th><th className="p-3 pr-4">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{erpInvoices.map((inv, i) => (<tr key={i} className="hover:bg-slate-50 transition-colors"><td className="p-3 pl-4 font-medium text-slate-700">{inv.id}</td><td className="p-3 text-slate-800">{inv.client}</td><td className="p-3 font-semibold text-slate-900">{inv.value}</td><td className="p-3 text-slate-600 flex items-center gap-1"><Calendar className="w-3 h-3" /> {inv.dueDate}</td><td className="p-3 pr-4"><span className={`px-2 py-1 rounded-full text-xs font-bold ${inv.status === 'Plătită' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'În așteptare' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{inv.status}</span></td></tr>))}</tbody></table></div>;
+function InvoicesTable({ invoices, onStatusChange }: { invoices: typeof erpInvoices; onStatusChange: (invoiceId: string, status: string) => void }) {
+    return <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden"><div className="p-4 bg-slate-50 border-b border-slate-100 font-semibold text-slate-700">Facturi Recente</div><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-slate-500"><tr><th className="p-3 pl-4">Număr</th><th className="p-3">Client</th><th className="p-3">Valoare</th><th className="p-3">Scadentă</th><th className="p-3">Status</th><th className="p-3 pr-4">Acțiuni</th></tr></thead><tbody className="divide-y divide-slate-100">{invoices.map((inv) => (<tr key={inv.id} className="hover:bg-slate-50 transition-colors"><td className="p-3 pl-4 font-medium text-slate-700">{inv.id}</td><td className="p-3 text-slate-800">{inv.client}</td><td className="p-3 font-semibold text-slate-900">{inv.value}</td><td className="p-3 text-slate-600 flex items-center gap-1"><Calendar className="w-3 h-3" /> {inv.dueDate}</td><td className="p-3"><span className={`px-2 py-1 rounded-full text-xs font-bold ${inv.status === 'Plătită' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'În așteptare' ? 'bg-amber-100 text-amber-700' : inv.status === 'Stornată' ? 'bg-slate-200 text-slate-700' : 'bg-red-100 text-red-700'}`}>{inv.status}</span></td><td className="p-3 pr-4"><select value={inv.status} onChange={(e) => onStatusChange(inv.id, e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-bold"><option>Plătită</option><option>În așteptare</option><option>Restantă</option><option>Stornată</option></select></td></tr>))}</tbody></table></div>;
+}
+
+function InventoryTable() {
+    const rows = [['Laptop Carbon X', '42 buc.', 'Disponibil'], ['Monitor UltraWide', '8 buc.', 'Stoc minim'], ['Docking Station AI', '126 buc.', 'Disponibil']];
+    return <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="font-black text-slate-900">Stocuri</h3><div className="mt-4 space-y-3">{rows.map(([name, qty, status]) => <div key={name} className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-sm"><span className="font-semibold">{name}</span><span>{qty}</span><span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-slate-600">{status}</span></div>)}</div></div>;
+}
+
+function SupplierExpenses() {
+    const rows = [['Cloud hosting', 'DataCenter Pro', '3,200 RON'], ['Materii prime', 'Nord Supply', '12,450 RON'], ['Curierat', 'FastShip', '1,780 RON']];
+    return <div className="rounded-2xl border border-slate-200 bg-white p-5"><h3 className="font-black text-slate-900">Cheltuieli furnizori</h3><div className="mt-4 space-y-3">{rows.map(([type, supplier, value]) => <div key={type} className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-sm"><div><p className="font-semibold">{type}</p><p className="text-xs text-slate-500">{supplier}</p></div><strong>{value}</strong></div>)}</div></div>;
 }
