@@ -20,7 +20,7 @@ export function AppFooter() {
                 </div>
 
                 <div className="border-t border-slate-200 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-slate-400">© 2026 AI Workflows. Toate drepturile rezervate.</p>
+                    <p className="text-sm text-slate-400">© 2026 Ai Store. Toate drepturile rezervate.</p>
                     <div className="flex gap-4 text-sm text-slate-400">
                         <a href="#" className="hover:text-indigo-600 transition-colors">Termeni și condiții</a>
                         <a href="#" className="hover:text-indigo-600 transition-colors">Confidențialitate</a>

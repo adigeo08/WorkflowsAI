@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Sparkles, Trash2 } from 'lucide-react';
+import { Lock, Sparkles, Trash2 } from 'lucide-react';
 import type { UploadedFile } from '../types';
 import { getFileIcon } from '../fileIcons';
 
@@ -10,7 +10,7 @@ type Props = {
     onProcessData: () => void;
 };
 
-export function ReviewStep({ files, onFileInput, onRemoveFile, onProcessData }: Props) {
+export function ReviewStep({ files, onRemoveFile, onProcessData }: Props) {
     return (
         <div className="animate-in fade-in slide-in-from-right-8 duration-500 max-w-3xl mx-auto">
             <div className="bg-white p-8 md:p-10 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
@@ -40,13 +40,13 @@ export function ReviewStep({ files, onFileInput, onRemoveFile, onProcessData }: 
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-100">
-                    <label className="cursor-pointer flex-1 bg-white border-2 border-dashed border-slate-300 text-slate-600 py-4 rounded-xl font-bold hover:bg-slate-50 hover:border-indigo-400 transition-colors flex items-center justify-center gap-2">
-                        <span>+ Adaugă alte fișiere</span>
-                        <input type="file" multiple className="hidden" onChange={onFileInput} />
-                    </label>
+                    <button disabled type="button" className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-100 py-4 font-bold text-slate-400">
+                        <Lock className="h-5 w-5" />
+                        <span>Fișiere suplimentare indisponibile</span>
+                    </button>
                     <button type="button" onClick={onProcessData} className="flex-[2] py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/30 hover:scale-[1.02] transition-all">
                         <Sparkles className="w-6 h-6" />
-                        Procesează datele cu AI
+                        Analizează cu AI
                     </button>
                 </div>
             </div>
