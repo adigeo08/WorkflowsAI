@@ -10,6 +10,7 @@ import { ModulesSidebar } from './components/ModulesSidebar';
 import { ProcessingStep } from './components/ProcessingStep';
 import { ReviewStep } from './components/ReviewStep';
 import { UploadStep } from './components/UploadStep';
+import { CHAT_ENDPOINT, CHAT_NOT_CONFIGURED_MESSAGE, sendChatMessage } from './chatConfig';
 import type { ChatMessage, ModuleId, Step, UploadedFile } from './types';
 
 export default function App() {
@@ -20,9 +21,8 @@ export default function App() {
     const [isModulesOpen, setIsModulesOpen] = useState(false);
     const [installedModules, setInstalledModules] = useState<ModuleId[]>([]);
     const [activeModulePreview, setActiveModulePreview] = useState<ModuleId | null>(null);
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-        { role: 'ai', text: 'Salut! Sunt asistentul tău AI. Am analizat documentele tale. Cu ce te pot ajuta astăzi?' }
-    ]);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>(CHAT_ENDPOINT ? [] : [{ role: 'ai', text: CHAT_NOT_CONFIGURED_MESSAGE }]);
+    const [isChatSending, setIsChatSending] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,6 +31,11 @@ export default function App() {
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatMessages, isChatOpen]);
+
+    const requireAuthForUpload = () => {
+        setFiles([]);
+        setStep('auth');
+    };
 
     const addFiles = (newFiles: File[]) => {
         const mockFiles: UploadedFile[] = newFiles.map((file) => ({
@@ -48,6 +53,7 @@ export default function App() {
     };
 
     const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (step !== 2 && step !== 3) { requireAuthForUpload(); e.target.value = ''; return; }
         addFiles(Array.from(e.target.files ?? []));
         e.target.value = '';
     };
@@ -55,7 +61,7 @@ export default function App() {
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
-        addFiles(Array.from(e.dataTransfer.files));
+        requireAuthForUpload();
     };
 
     const openAuthStep = () => {
@@ -86,22 +92,26 @@ export default function App() {
         setTimeout(() => setStep(3), 3000);
     };
 
-    const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!chatInput.trim()) return;
+        const text = chatInput.trim();
+        if (!text || isChatSending) return;
+        if (!CHAT_ENDPOINT) {
+            setChatMessages([{ role: 'ai', text: CHAT_NOT_CONFIGURED_MESSAGE }]);
+            return;
+        }
 
-        setChatMessages((prev) => [...prev, { role: 'user', text: chatInput }]);
+        setChatMessages((prev) => [...prev, { role: 'user', text }]);
         setChatInput('');
-
-        setTimeout(() => {
-            setChatMessages((prev) => [
-                ...prev,
-                {
-                    role: 'ai',
-                    text: 'Conform datelor GadgetHub, vânzările de smartwatch-uri și docking station-uri au crescut cu 12%, iar comenzile online vin mai ales din campaniile pentru accesorii premium.'
-                }
-            ]);
-        }, 1500);
+        setIsChatSending(true);
+        try {
+            const reply = await sendChatMessage(text);
+            setChatMessages((prev) => [...prev, { role: 'ai', text: reply }]);
+        } catch (error) {
+            setChatMessages((prev) => [...prev, { role: 'ai', text: error instanceof Error ? error.message : 'Eroare la salvare' }]);
+        } finally {
+            setIsChatSending(false);
+        }
     };
 
     const toggleModule = (moduleId: ModuleId) => {
@@ -158,6 +168,8 @@ export default function App() {
                 onClose={() => setIsChatOpen(false)}
                 onInputChange={setChatInput}
                 onSubmit={handleSendMessage}
+                isSending={isChatSending}
+                isConfigured={Boolean(CHAT_ENDPOINT)}
             />
 
             <ModulesSidebar
