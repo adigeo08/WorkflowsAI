@@ -1,3 +1,5 @@
+import { erpInventory, formatRon, getAvailableProducts, type Product } from '../../../sharedBusinessData';
+
 export type CatalogItem = {
   id: string;
   name: string;
@@ -9,8 +11,16 @@ export type CatalogItem = {
   price: string;
 };
 
-export const initialCatalogItems: CatalogItem[] = [
-  { id: 'stock-1', name: 'Laptop Carbon X', sku: 'LCX-14-PRO', category: 'Hardware', stock: 42, minimumStock: 10, supplier: 'GadgetHub.ro', price: '2.998 RON' },
-  { id: 'stock-2', name: 'Monitor UltraWide', sku: 'MUW-34', category: 'Hardware', stock: 8, minimumStock: 12, supplier: 'GadgetHub.ro', price: '4.497 RON' },
-  { id: 'stock-3', name: 'Docking Station AI', sku: 'DSAI-11P', category: 'Accesorii', stock: 126, minimumStock: 30, supplier: 'GadgetHub.ro', price: '5.996 RON' }
-];
+export const productToCatalogItem = (product: Product): CatalogItem => ({
+  id: product.id,
+  name: product.name,
+  sku: product.sku,
+  category: product.category,
+  stock: product.stock,
+  minimumStock: product.minimumStock,
+  supplier: product.supplier,
+  price: formatRon(product.price)
+});
+
+export const initialCatalogItems: CatalogItem[] = erpInventory.map(productToCatalogItem);
+export const ecommerceCatalogItems: CatalogItem[] = getAvailableProducts().map(productToCatalogItem);

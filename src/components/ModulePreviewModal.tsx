@@ -15,14 +15,15 @@ import { marketplaceModules } from '../moduleData';
 import type { ModuleId } from '../types';
 import { EcommercePuckEditor } from './module-preview/puck/EcommercePuckEditor';
 import { LandingPuckEditor } from './module-preview/puck/LandingPuckEditor';
-import { initialCatalogItems, type CatalogItem } from './module-preview/puck/sharedCatalog';
+import { ecommerceCatalogItems, type CatalogItem } from './module-preview/puck/sharedCatalog';
+import { customers as demoCustomers, erpInventory, expenses as demoExpenses, formatPercent, formatRon, getEstimatedProfit, getOutstandingInvoices, invoices as demoInvoices, leads as demoLeads, orders as demoOrders } from '../sharedBusinessData';
 
 type Props = {
     activeModulePreview: ModuleId | null;
     onClose: () => void;
 };
 
-type CrmTab = 'leads' | 'orders' | 'customers' | 'catalog';
+type CrmTab = 'leads' | 'orders' | 'customers';
 type ErpTab = 'invoices' | 'inventory' | 'expenses';
 type LeadStatus = 'Nou' | 'Contactat' | 'Calificat' | 'Pierdut';
 type LeadSource = 'Website' | 'Recomandare' | 'Campanie' | 'Cold call';
@@ -165,49 +166,22 @@ const emptyCatalogItem: Omit<CatalogItem, 'id'> = {
     price: ''
 };
 
-const initialLeads: Lead[] = [
-    { id: 'lead-1', company: 'GadgetHub.ro', contactPerson: 'Irina Popescu', contact: 'irina@gadgethub.ro', source: 'Website', interest: 'Magazin online', estimatedValue: '18,400 RON', status: 'Nou' },
-    { id: 'lead-2', company: 'TechWear București', contactPerson: 'Andrei Ionescu', contact: 'andrei@techwear.ro', source: 'Campanie', interest: 'Magazin online', estimatedValue: '32,000 RON', status: 'Contactat' }
-];
+const initialLeads: Lead[] = demoLeads.map((lead) => ({ ...lead, estimatedValue: formatRon(lead.estimatedValue) }));
 
-const initialOrders: Order[] = [
-    { id: 'order-1', customer: 'GadgetHub.ro', orderNumber: 'CMD-2026-018', products: 'Laptop Carbon X + accesorii premium', value: '24,500 RON', deliveryDate: '30 Iun 2026', status: 'Confirmată' },
-    { id: 'order-2', customer: 'GadgetHub.ro', orderNumber: 'CMD-2026-019', products: 'Smartwatch Pro X + Docking Station AI', value: '42,000 RON', deliveryDate: '08 Iul 2026', status: 'În lucru' }
-];
+const initialOrders: Order[] = demoOrders.map((order) => ({ ...order, products: order.productSkus.join(', '), value: formatRon(order.value) }));
 
-const initialCustomers: Customer[] = [
-    { id: 'customer-1', company: 'GadgetHub.ro', fiscalCode: 'RO45890123', contactPerson: 'Irina Popescu', email: 'irina@gadgethub.ro', phone: '0733 410 900', type: 'Activ', totalContractsValue: '52,000 RON' },
-    { id: 'customer-2', company: 'TechWear București', fiscalCode: 'RO77351204', contactPerson: 'Andrei Ionescu', email: 'andrei@techwear.ro', phone: '0744 220 118', type: 'Prospect', totalContractsValue: '12,000 RON' }
-];
+const initialCustomers: Customer[] = demoCustomers.map((customer) => ({ ...customer, totalContractsValue: formatRon(customer.totalContractsValue) }));
 
-const initialInvoices: Invoice[] = [
-    { id: 'invoice-1', documentType: 'Factură', number: 'FCT-2026-001', client: 'GadgetHub.ro', description: 'Comandă Laptop Carbon X pentru showroom', value: '12,000 RON', vat: '19%', dueDate: '12 Iun 2026', status: 'Plătită' },
-    { id: 'invoice-2', documentType: 'Proformă', number: 'PRO-2026-014', client: 'GadgetHub.ro', description: 'Pachet accesorii premium pentru campanie', value: '5,500 RON', vat: '19%', dueDate: '18 Iun 2026', status: 'Proformă' },
-    { id: 'invoice-3', documentType: 'Factură', number: 'FCT-2026-003', client: 'GadgetHub.ro', description: 'Lot smartwatch-uri și docking station-uri', value: '22,300 RON', vat: '19%', dueDate: '25 Iun 2026', status: 'Restantă' }
-];
+const initialInvoices: Invoice[] = demoInvoices.map((invoice) => ({ ...invoice, value: formatRon(invoice.value), vat: formatPercent(invoice.vatRate) }));
 
-const initialInventory: InventoryItem[] = initialCatalogItems.map((item) => ({
-    id: item.id,
-    productName: item.name,
-    sku: item.sku,
-    category: item.category,
-    quantity: item.stock,
-    minimumStock: item.minimumStock,
-    supplier: item.supplier
-}));
+const initialInventory: InventoryItem[] = erpInventory.map((item) => ({ id: item.id, productName: item.name, sku: item.sku, category: item.category, quantity: item.stock, minimumStock: item.minimumStock, supplier: item.supplier }));
 
-const initialExpenses: Expense[] = [
-    { id: 'expense-1', type: 'Garanții extinse laptopuri', supplier: 'CarbonTech Distribution', value: '3,200 RON', date: '20 Iun 2026', paymentStatus: 'Programată', costCenter: 'Operațional' },
-    { id: 'expense-2', type: 'Campanie PPC smartwatch-uri', supplier: 'SmartAds Electronics', value: '6,800 RON', date: '21 Iun 2026', paymentStatus: 'Neplătită', costCenter: 'Marketing' },
-    { id: 'expense-3', type: 'Curierat gadgeturi fragile', supplier: 'Rapid Gadget Courier', value: '1,780 RON', date: '24 Iun 2026', paymentStatus: 'Plătită', costCenter: 'Vânzări' }
-];
+const initialExpenses: Expense[] = demoExpenses.map((expense) => ({ ...expense, value: formatRon(expense.value) }));
 
 const createId = (prefix: string) =>
     `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
-    const [catalogItems, setCatalogItems] = useState<CatalogItem[]>(initialCatalogItems);
-
     if (!activeModulePreview) return null;
 
     const activeModule = marketplaceModules.find((module) => module.id === activeModulePreview);
@@ -223,8 +197,8 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
                     <button onClick={onClose} className="rounded-full p-2 hover:bg-slate-100"><X className="h-5 w-5" /></button>
                 </div>
 
-                {activeModulePreview === 'crm' && <CrmPreview catalogItems={catalogItems} onCatalogItemsChange={setCatalogItems} />}
-                {activeModulePreview === 'ecommerce' && <EcommerceBuilderPreview catalogItems={catalogItems} />}
+                {activeModulePreview === 'crm' && <CrmPreview />}
+                {activeModulePreview === 'ecommerce' && <EcommerceBuilderPreview catalogItems={ecommerceCatalogItems} />}
                 {activeModulePreview === 'erp' && <ErpPreview />}
                 {activeModulePreview === 'landing' && <LandingBuilderPreview />}
             </div>
@@ -232,7 +206,7 @@ export function ModulePreviewModal({ activeModulePreview, onClose }: Props) {
     );
 }
 
-function CrmPreview({ catalogItems, onCatalogItemsChange }: { catalogItems: CatalogItem[]; onCatalogItemsChange: (items: CatalogItem[]) => void }) {
+function CrmPreview() {
     const [activeCrmTab, setActiveCrmTab] = useState<CrmTab>('leads');
     const [leads, setLeads] = useState<Lead[]>(initialLeads);
     const [orders, setOrders] = useState<Order[]>(initialOrders);
@@ -243,8 +217,6 @@ function CrmPreview({ catalogItems, onCatalogItemsChange }: { catalogItems: Cata
     const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
     const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
     const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
-    const [catalogDraft, setCatalogDraft] = useState<Omit<CatalogItem, 'id'>>(emptyCatalogItem);
-    const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
 
     const convertLeadToCustomer = (lead: Lead) => {
         setCustomers((prev) => [...prev, { id: createId('customer'), company: lead.company, fiscalCode: 'RO-DUMMY', contactPerson: lead.contactPerson, email: lead.contact.includes('@') ? lead.contact : 'contact@client-demo.ro', phone: lead.contact.includes('@') ? '0700 000 000' : lead.contact, type: 'Prospect', totalContractsValue: lead.estimatedValue }]);
@@ -259,17 +231,16 @@ function CrmPreview({ catalogItems, onCatalogItemsChange }: { catalogItems: Cata
                 <MetricCard color="emerald" label="Comenzi în lucru" value={`${orders.filter((order) => order.status === 'În lucru' || order.status === 'Confirmată').length}`} change="flux operațional" />
                 <MetricCard color="purple" label="Clienți activi" value={`${customers.filter((customer) => customer.type === 'Activ').length}`} change="portofoliu curat" />
             </div>
-            <CrmTabs activeTab={activeCrmTab} onTabChange={setActiveCrmTab} counts={{ leads: leads.length, orders: orders.length, customers: customers.length, catalog: catalogItems.length }} />
+            <CrmTabs activeTab={activeCrmTab} onTabChange={setActiveCrmTab} counts={{ leads: leads.length, orders: orders.length, customers: customers.length }} />
             {activeCrmTab === 'leads' && <LeadForm leads={leads} draft={leadDraft} editingId={editingLeadId} onDraftChange={setLeadDraft} onSubmit={() => { if (!leadDraft.company.trim()) return; setLeads((prev) => editingLeadId ? prev.map((lead) => lead.id === editingLeadId ? { ...leadDraft, id: editingLeadId } : lead) : [...prev, { ...leadDraft, id: createId('lead') }]); setEditingLeadId(null); setLeadDraft(emptyLead); }} onEdit={(lead) => { setEditingLeadId(lead.id); setLeadDraft(lead); }} onDelete={(id) => setLeads((prev) => prev.filter((lead) => lead.id !== id))} onQualify={(id) => setLeads((prev) => prev.map((lead) => lead.id === id ? { ...lead, status: 'Calificat' } : lead))} onConvert={convertLeadToCustomer} />}
             {activeCrmTab === 'orders' && <OrderForm orders={orders} draft={orderDraft} editingId={editingOrderId} onDraftChange={setOrderDraft} onSubmit={() => { if (!orderDraft.customer.trim()) return; setOrders((prev) => editingOrderId ? prev.map((order) => order.id === editingOrderId ? { ...orderDraft, id: editingOrderId } : order) : [...prev, { ...orderDraft, id: createId('order') }]); setEditingOrderId(null); setOrderDraft(emptyOrder); }} onEdit={(order) => { setEditingOrderId(order.id); setOrderDraft(order); }} onDelete={(id) => setOrders((prev) => prev.filter((order) => order.id !== id))} onStatusChange={(id, status) => setOrders((prev) => prev.map((order) => order.id === id ? { ...order, status } : order))} />}
             {activeCrmTab === 'customers' && <CustomerForm customers={customers} draft={customerDraft} editingId={editingCustomerId} onDraftChange={setCustomerDraft} onSubmit={() => { if (!customerDraft.company.trim()) return; setCustomers((prev) => editingCustomerId ? prev.map((customer) => customer.id === editingCustomerId ? { ...customerDraft, id: editingCustomerId } : customer) : [...prev, { ...customerDraft, id: createId('customer') }]); setEditingCustomerId(null); setCustomerDraft(emptyCustomer); }} onEdit={(customer) => { setEditingCustomerId(customer.id); setCustomerDraft(customer); }} onDelete={(id) => setCustomers((prev) => prev.filter((customer) => customer.id !== id))} />}
-            {activeCrmTab === 'catalog' && <CatalogForm catalogItems={catalogItems} draft={catalogDraft} editingId={editingCatalogItemId} onDraftChange={setCatalogDraft} onSubmit={() => { if (!catalogDraft.name.trim()) return; onCatalogItemsChange(editingCatalogItemId ? catalogItems.map((item) => item.id === editingCatalogItemId ? { ...catalogDraft, id: editingCatalogItemId } : item) : [...catalogItems, { ...catalogDraft, id: createId('catalog') }]); setEditingCatalogItemId(null); setCatalogDraft(emptyCatalogItem); }} onEdit={(item) => { setEditingCatalogItemId(item.id); setCatalogDraft({ name: item.name, sku: item.sku, category: item.category, stock: item.stock, minimumStock: item.minimumStock, supplier: item.supplier, price: item.price }); }} onDelete={(id) => onCatalogItemsChange(catalogItems.filter((item) => item.id !== id))} />}
         </div>
     );
 }
 
 function CrmTabs({ activeTab, onTabChange, counts }: { activeTab: CrmTab; onTabChange: (tab: CrmTab) => void; counts: Record<CrmTab, number> }) {
-    return <TabBar tabs={[{ id: 'leads', label: 'Lead-uri', count: counts.leads }, { id: 'orders', label: 'Comenzi', count: counts.orders }, { id: 'customers', label: 'Clienți', count: counts.customers }, { id: 'catalog', label: 'Catalog produse', count: counts.catalog }]} activeTab={activeTab} onTabChange={onTabChange} />;
+    return <TabBar tabs={[{ id: 'leads', label: 'Lead-uri', count: counts.leads }, { id: 'orders', label: 'Comenzi/Oportunități', count: counts.orders }, { id: 'customers', label: 'Clienți', count: counts.customers }]} activeTab={activeTab} onTabChange={onTabChange} />;
 }
 
 function LeadForm({ leads, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete, onQualify, onConvert }: { leads: Lead[]; draft: Omit<Lead, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<Lead, 'id'>) => void; onSubmit: () => void; onEdit: (lead: Lead) => void; onDelete: (id: string) => void; onQualify: (id: string) => void; onConvert: (lead: Lead) => void }) {
@@ -284,10 +255,6 @@ function CustomerForm({ customers, draft, editingId, onDraftChange, onSubmit, on
     return <section className="rounded-3xl border border-purple-100 bg-purple-50/50 p-5"><FormHeader title="Clienți" description="Portofoliu cu date fiscale, contact și sumar comercial." buttonLabel={editingId ? 'Salvează client' : 'Adaugă client'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-4"><TextInput value={draft.company} onChange={(company) => onDraftChange({ ...draft, company })} placeholder="Companie" /><TextInput value={draft.fiscalCode} onChange={(fiscalCode) => onDraftChange({ ...draft, fiscalCode })} placeholder="CUI" /><TextInput value={draft.contactPerson} onChange={(contactPerson) => onDraftChange({ ...draft, contactPerson })} placeholder="Persoană contact" /><TextInput value={draft.email} onChange={(email) => onDraftChange({ ...draft, email })} placeholder="Email" /><TextInput value={draft.phone} onChange={(phone) => onDraftChange({ ...draft, phone })} placeholder="Telefon" /><SelectInput value={draft.type} onChange={(type) => onDraftChange({ ...draft, type: type as CustomerType })} options={['Prospect', 'Activ', 'Inactiv']} /><TextInput value={draft.totalContractsValue} onChange={(totalContractsValue) => onDraftChange({ ...draft, totalContractsValue })} placeholder="Valoare contracte" /></div><div className="mt-5 grid gap-3 lg:grid-cols-2">{customers.map((customer) => <EntityCard key={customer.id} title={customer.company} subtitle={`${customer.contactPerson} • ${customer.email} • ${customer.phone}`} badge={customer.type} meta={`CUI ${customer.fiscalCode} • Contracte ${customer.totalContractsValue}`} onEdit={() => onEdit(customer)} onDelete={() => onDelete(customer.id)} extraActions={<button className="rounded-lg bg-purple-50 px-3 py-2 text-xs font-bold text-purple-700">Vezi sumar</button>} />)}</div></section>;
 }
 
-
-function CatalogForm({ catalogItems, draft, editingId, onDraftChange, onSubmit, onEdit, onDelete }: { catalogItems: CatalogItem[]; draft: Omit<CatalogItem, 'id'>; editingId: string | null; onDraftChange: (draft: Omit<CatalogItem, 'id'>) => void; onSubmit: () => void; onEdit: (item: CatalogItem) => void; onDelete: (id: string) => void }) {
-    return <section className="rounded-3xl border border-cyan-100 bg-cyan-50/50 p-5"><FormHeader title="Catalog produse CRM" description="Sursa comună pentru articolele disponibile în CRM și în magazinul eCommerce." buttonLabel={editingId ? 'Salvează produs' : 'Adaugă produs'} onSubmit={onSubmit} /><div className="mt-5 grid gap-3 md:grid-cols-4"><TextInput value={draft.name} onChange={(name) => onDraftChange({ ...draft, name })} placeholder="Nume produs" /><TextInput value={draft.sku} onChange={(sku) => onDraftChange({ ...draft, sku })} placeholder="SKU" /><TextInput value={draft.category} onChange={(category) => onDraftChange({ ...draft, category })} placeholder="Categorie" /><TextInput value={draft.price} onChange={(price) => onDraftChange({ ...draft, price })} placeholder="Preț" /><NumberInput value={draft.stock} onChange={(stock) => onDraftChange({ ...draft, stock })} placeholder="Stoc" /><NumberInput value={draft.minimumStock} onChange={(minimumStock) => onDraftChange({ ...draft, minimumStock })} placeholder="Stoc minim" /><TextInput value={draft.supplier} onChange={(supplier) => onDraftChange({ ...draft, supplier })} placeholder="Furnizor" /></div><DataTable headers={['Produs', 'SKU', 'Categorie', 'Stoc', 'Preț', 'Furnizor', 'Acțiuni']}>{catalogItems.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="p-3 font-bold">{item.name}</td><td className="p-3">{item.sku}</td><td className="p-3">{item.category}</td><td className="p-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${item.stock <= item.minimumStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{item.stock} buc.</span></td><td className="p-3 font-semibold">{item.price}</td><td className="p-3">{item.supplier}</td><td className="p-3"><RowActions onEdit={() => onEdit(item)} onDelete={() => onDelete(item.id)} /></td></tr>)}</DataTable></section>;
-}
 
 function ErpPreview() {
     const [activeErpTab, setActiveErpTab] = useState<ErpTab>('invoices');
@@ -304,9 +271,9 @@ function ErpPreview() {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <ErpKpi icon={<CreditCard className="h-10 w-10 rounded-xl bg-amber-100 p-2 text-amber-600" />} label="Conturi de încasat" value="48,200 RON" />
+                <ErpKpi icon={<CreditCard className="h-10 w-10 rounded-xl bg-amber-100 p-2 text-amber-600" />} label="Conturi de încasat" value={formatRon(getOutstandingInvoices().reduce((sum, invoice) => sum + invoice.value, 0))} />
                 <ErpKpi icon={<Truck className="h-10 w-10 rounded-xl bg-red-100 p-2 text-red-600" />} label="Stocuri minime" value={`${inventory.filter((item) => item.quantity <= item.minimumStock).length} Produse`} />
-                <ErpKpi icon={<BarChart3 className="h-10 w-10 rounded-xl bg-emerald-100 p-2 text-emerald-600" />} label="Profit Net (T3)" value="112,800 RON" />
+                <ErpKpi icon={<BarChart3 className="h-10 w-10 rounded-xl bg-emerald-100 p-2 text-emerald-600" />} label="Profit estimativ" value={formatRon(getEstimatedProfit())} />
             </div>
 
             <ErpTabs activeTab={activeErpTab} onTabChange={setActiveErpTab} counts={{ invoices: invoices.length, inventory: inventory.length, expenses: expenses.length }} />

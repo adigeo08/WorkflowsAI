@@ -1,6 +1,6 @@
 import type { Config, Data } from '@measured/puck';
 import type { CatalogItem } from './sharedCatalog';
-import { initialCatalogItems } from './sharedCatalog';
+import { ecommerceCatalogItems } from './sharedCatalog';
 
 type StoreHeaderProps = { logo: string; menuItems: string; cartLabel: string };
 type StoreHeroProps = { badge: string; title: string; subtitle: string; primaryCta: string; accentColor: string; backgroundColor: string; textColor: string };
@@ -18,7 +18,7 @@ type EcommerceComponents = {
 
 const textField = { type: 'text' } as const;
 
-export const createEcommercePuckConfig = (catalogItems: CatalogItem[] = initialCatalogItems): Config<EcommerceComponents> => ({
+export const createEcommercePuckConfig = (catalogItems: CatalogItem[] = ecommerceCatalogItems): Config<EcommerceComponents> => ({
   components: {
     StoreHeader: {
       fields: { logo: textField, menuItems: textField, cartLabel: textField },
@@ -45,7 +45,7 @@ export const createEcommercePuckConfig = (catalogItems: CatalogItem[] = initialC
       fields: { title: textField, columns: textField },
       defaultProps: { title: 'Produse populare', columns: '3' },
       render: (props) => {
-        const products = props.products ?? catalogItems;
+        const products = (props.products ?? catalogItems).filter((product) => product.stock > 0);
         return <section className="px-6 py-12"><h2 className="text-3xl font-black text-slate-950">{props.title}</h2><div className="mt-6 grid gap-5" style={{ gridTemplateColumns: `repeat(${Number(props.columns) || 3}, minmax(0, 1fr))` }}>{products.map((product, index) => <article key={product.id} className="rounded-3xl bg-white p-5 text-slate-950 shadow-xl ring-1 ring-slate-100"><div className={`mb-5 h-44 rounded-2xl ${index % 3 === 0 ? 'bg-gradient-to-br from-blue-100 to-indigo-200' : index % 3 === 1 ? 'bg-gradient-to-br from-emerald-100 to-cyan-200' : 'bg-gradient-to-br from-amber-100 to-pink-200'}`} /><h3 className="text-xl font-black">{product.name}</h3><p className="mt-2 text-sm text-slate-500">{product.sku} • {product.category} • stoc {product.stock}</p><div className="mt-5 flex items-center justify-between"><strong>{product.price}</strong><button className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white">Adaugă</button></div></article>)}</div></section>;
       }
     },
